@@ -1,5 +1,5 @@
 // --- LIVE API CONFIGURATION ---
-const API_BASE_URL = 'http://localhost:5000/api'; // আপনার Render URL
+const API_BASE_URL = 'https://meal-manager-backend-kp8y.onrender.com/api';
 
 const state = {
     members: [],

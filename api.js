@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://meal-manager-backend-kp8y.onrender.com/api';
+
 
 // ==========================================
 // 🛡️ SAAS MAGIC: GLOBAL FETCH INTERCEPTOR
