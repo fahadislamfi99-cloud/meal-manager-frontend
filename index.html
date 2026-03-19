@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="bn" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mess Manager | Premium SaaS</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Bengali', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0f172a', /* Slate 900 */
+                        secondary: '#3b82f6', /* Blue 500 */
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Glassmorphism for Navbar */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        /* Premium Soft Background */
+        .saas-bg {
+            background: radial-gradient(circle at top center, #eff6ff 0%, #ffffff 40%);
+        }
+
+        /* Subtle floating animation */
+        .float-anim {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased text-slate-900 bg-white selection:bg-blue-100 selection:text-blue-900">
+
+    <nav class="fixed w-full top-0 z-50 glass-nav transition-all duration-300 py-3">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2 cursor-pointer">
+                    <div class="bg-primary text-white p-1.5 rounded-lg">
+                        <i data-lucide="utensils" class="w-5 h-5"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight">MessManager.</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <a href="login.html" class="hidden sm:block text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                        Log in
+                    </a>
+                    <a href="login.html" class="inline-flex justify-center items-center px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-md shadow-sm hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
+                        Get Started
+                        <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="saas-bg pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium mb-8">
+                <span class="flex h-2 w-2 rounded-full bg-blue-600"></span>
+                The #1 SaaS for Bachelor Accommodations
+            </div>
+
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+                মেসের হিসাব রাখা <br class="hidden sm:block">
+                এখন <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">হাতের মুঠোয়</span>
+            </h1>
+
+            <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-600 mb-10">
+                খাতা-কলমের বিরক্তিকর হিসাব বাদ দিন। মিল, বাজার আর বকেয়ার হিসাব রাখুন ১০০% নির্ভুলভাবে, একদম ফ্রিতে।
+            </p>
+
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-16">
+                <a href="login.html" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 text-base font-medium text-white bg-primary rounded-md shadow-lg hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 hover:-translate-y-0.5">
+                    Create Free Account
+                </a>
+                <a href="#features" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 text-base font-medium text-slate-700 bg-white border border-slate-200 rounded-md shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-all">
+                    <i data-lucide="play-circle" class="w-5 h-5 me-2 text-slate-400"></i> See how it works
+                </a>
+            </div>
+
+            <div class="relative max-w-5xl mx-auto mt-10 float-anim">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur opacity-20"></div>
+                <img src="dashboard.png" alt="Dashboard Preview" class="relative rounded-2xl border border-slate-200 bg-white/50 backdrop-blur-sm p-4 shadow-2xl mx-auto max-h-[500px] object-contain">
+            </div>
+
+        </div>
+    </section>
+
+    <section id="features" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4">সবকিছু যা আপনার মেস পরিচালনার জন্য প্রয়োজন</h2>
+                <p class="text-lg text-slate-600">আমরা প্রতিটি ফিচার এমনভাবে ডিজাইন করেছি যাতে মেস ম্যানেজারের সময় বাঁচে এবং মেম্বারদের মাঝে ১০০% স্বচ্ছতা থাকে।</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div class="group p-8 bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i data-lucide="calculator" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">অটোমেটিক হিসাব</h3>
+                    <p class="text-slate-600 leading-relaxed">মিল রেট, মোট খরচ, বকেয়া এবং পাওনা—সবকিছু সিস্টেম নিজ থেকেই নিখুঁতভাবে ক্যালকুলেট করে দেবে।</p>
+                </div>
+
+                <div class="group p-8 bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i data-lucide="file-spreadsheet" class="w-6 h-6 text-emerald-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">PDF ও Excel রিপোর্ট</h3>
+                    <p class="text-slate-600 leading-relaxed">মাস শেষে মাত্র এক ক্লিকেই পুরো মেসের সুন্দর ডিজাইন করা পিডিএফ বা এক্সেল রিপোর্ট ডাউনলোড করুন।</p>
+                </div>
+
+                <div class="group p-8 bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i data-lucide="link" class="w-6 h-6 text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">পাবলিক লিংক শেয়ার</h3>
+                    <p class="text-slate-600 leading-relaxed">ম্যানেজারের লগিন ছাড়াই মেম্বাররা নিজেদের হিসাব দেখতে পারবে একটি সিকিউর পাবলিক লিংকের মাধ্যমে।</p>
+                </div>
+
+                <div class="group p-8 bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i data-lucide="shield-check" class="w-6 h-6 text-rose-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">পিন সিকিউরিটি</h3>
+                    <p class="text-slate-600 leading-relaxed">ভুলে যাওয়া পিন ইমেইলের OTP এর মাধ্যমে রিকভার করুন। আপনার মেসের ডেটা ১০০% সুরক্ষিত।</p>
+                </div>
+
+                <div class="group p-8 bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i data-lucide="refresh-cw" class="w-6 h-6 text-orange-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">সহজ Handover</h3>
+                    <p class="text-slate-600 leading-relaxed">এক ক্লিকেই বর্তমান মাস ক্লোজ করে বকেয়া/পাওনা ব্যালেন্সগুলো পরের মাসে অটোমেটিক ট্রান্সফার করুন।</p>
+                </div>
+
+                <div class="group p-8 bg-white border border-slate-200 rounded-2xl hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i data-lucide="languages" class="w-6 h-6 text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">বাংলা পিন ও ভাষা</h3>
+                    <p class="text-slate-600 leading-relaxed">সম্পূর্ণ বাংলা ভাষায় অ্যাপটি ব্যবহার করুন। এমনকি রেজিস্ট্রেশন ও লগিন করুন বাংলা পিন দিয়ে।</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-slate-50 border-t border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-6">রেডি মেসকে স্মার্ট করতে?</h2>
+            <p class="text-lg text-slate-600 mb-10">কোনো ক্রেডিট কার্ড লাগবে না। ১০০% ফ্রি। আজই মেসকে ডিজিটাল করার প্রথম ধাপ নিন।</p>
+            <a href="login.html" class="inline-flex justify-center items-center px-8 py-4 text-base font-bold text-white bg-blue-600 rounded-md shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all hover:-translate-y-1">
+                <i data-lucide="zap" class="w-5 h-5 me-2 fill-white"></i> Start Managing For Free
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-white border-t border-slate-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <div class="flex items-center gap-2">
+                <div class="bg-slate-900 text-white p-1 rounded-md">
+                    <i data-lucide="utensils" class="w-4 h-4"></i>
+                </div>
+                <span class="font-bold text-slate-900 tracking-tight">MessManager.</span>
+            </div>
+
+            <p class="text-slate-500 text-sm font-medium">
+                &copy; <span id="current-year">2026</span> All rights reserved.
+            </p>
+
+            <p class="text-slate-500 text-sm">
+                Crafted with <i data-lucide="heart" class="w-4 h-4 inline text-rose-500 fill-rose-500"></i> by 
+                <a href="https://www.facebook.com/fahad.islam.fir" target="_blank" class="font-semibold text-slate-900 hover:text-blue-600 transition-colors">Fahad Islam</a>
+            </p>
+
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        document.getElementById('current-year').innerText = new Date().getFullYear();
+    </script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mess Monthly Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { 
+            background-color: #f4f7f6; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .view-section { 
+            max-width: 1000px; 
+            margin: 20px auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+        }
+        
+        /* 🎨 Custom Premium Table Styles */
+        .table > :not(caption) > * > * { padding: 1rem 0.75rem; vertical-align: middle; }
+        .due { color: #dc3545 !important; font-weight: bold; background-color: #f8d7da !important; }
+        .adv { color: #198754 !important; font-weight: bold; background-color: #e8f5e9 !important; }
+        .table-light { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; }
+        
+        @media print {
+            body { background-color: white; padding: 0; }
+            .view-section { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-spinner" class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <h5 class="mt-3 text-muted">সিকিউর রিপোর্ট লোড হচ্ছে...</h5>
+    </div>
+
+    <div id="error-msg" class="alert alert-danger d-none text-center fw-bold mx-auto mt-5" style="max-width: 600px;"></div>
+
+    <div id="report" class="view-section d-none">
+        
+        <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-start align-items-md-center mb-4 border-bottom pb-3 gap-3 gap-md-0">
+            <div>
+                <h4 class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-spreadsheet me-2 text-primary"></i>Monthly Report</h4>
+                <small class="text-muted">মেস হিসাবের চূড়ান্ত রিপোর্ট</small>
+            </div>
+            <!-- <div class="d-flex gap-2 d-print-none">
+                <button onclick="exportReportToExcel()" class="btn btn-outline-success shadow-sm px-3 fw-bold">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel
+                </button>
+                <button onclick="downloadReportPDF()" class="btn btn-outline-danger shadow-sm px-3 fw-bold">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF
+                </button>
+            </div> -->
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border border-primary border-opacity-25 shadow-sm h-100 bg-primary bg-opacity-10">
+                    <div class="card-body text-center py-3">
+                        <div class="text-primary small fw-bold text-uppercase mb-1">Total Expense</div>
+                        <h3 class="fw-bold mb-0 text-dark">৳<span id="report-expense">0</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border border-success border-opacity-25 shadow-sm h-100 bg-success bg-opacity-10">
+                    <div class="card-body text-center py-3">
+                        <div class="text-success small fw-bold text-uppercase mb-1">Total Meals</div>
+                        <h3 class="fw-bold mb-0 text-dark" id="report-meals">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border border-info border-opacity-25 shadow-sm h-100 bg-info bg-opacity-10">
+                    <div class="card-body text-center py-3">
+                        <div class="text-info small fw-bold text-uppercase mb-1">Meal Rate</div>
+                        <h3 class="fw-bold mb-0 text-dark" id="report-rate">0.00</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0" style="font-size: 0.95rem;">
+                    <thead class="table-light text-secondary small text-uppercase fw-bold">
+                        <tr>
+                            <th class="px-3 text-start">MEMBER NAME</th>
+                            <th class="text-center">MEALS</th>
+                            <th class="text-end">MEAL COST</th>
+                            <th class="text-end">DEPOSITED</th>
+                            <th class="text-end px-3">FINAL BALANCE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-report">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-none d-print-flex justify-content-between mt-5 pt-5 px-4">
+            <div class="text-center border-top border-dark border-2 pt-2 px-3" style="width: 200px;">
+                <span class="fw-bold text-dark">Manager Signature</span>
+            </div>
+            <div class="text-center border-top border-dark border-2 pt-2 px-3" style="width: 200px;">
+                <span class="fw-bold text-dark">Date</span>
+            </div>
+        </div>
+        <div class="text-center mt-3 d-print-none text-muted small">
+            This is a read-only secure view. Managed by SaaS Mess Manager.
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const API_BASE_URL = 'https://meal-manager-backend-kp8y.onrender.com/api'; 
+        let reportData = null; 
+
+        if (!token) {
+            showError("❌ কোনো সিক্রেট লিংক পাওয়া যায়নি!");
+        } else {
+            fetch(`${API_BASE_URL}/public/report/${token}`)
+                .then(res => res.json())
+                .then(json => {
+                    document.getElementById('loading-spinner').classList.add('d-none');
+                    if (json.success) {
+                        reportData = json.data;
+                        document.getElementById('report').classList.remove('d-none');
+                        
+                        document.getElementById('report-expense').innerText = reportData.totalExpense.toFixed(2);
+                        document.getElementById('report-meals').innerText = reportData.totalMeals;
+                        document.getElementById('report-rate').innerText = reportData.mealRate.toFixed(2);
+
+                        let tbody = '';
+                        reportData.members.forEach(m => {
+                            const isDue = m.balance < 0;
+                            const balClass = isDue ? 'due' : 'adv';
+                            const statusText = isDue ? 'Due' : 'Adv';
+                            
+                            // 🌟 Premium UI Logics (Based on Screenshot)
+                            const managerBadge = m.isManager ? '<span class="badge bg-warning text-dark ms-2 rounded-pill px-2" style="font-size: 11px;">Manager</span>' : '';
+                            const mealCostUI = m.isManager 
+                                ? '<span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-2 py-1">Free (Manager)</span>' 
+                                : `<span class="text-muted">৳${m.payableAmount.toFixed(2)}</span>`;
+
+                            tbody += `
+                                <tr>
+                                    <td class="px-3 text-start">
+                                        <div class="fw-bold text-dark fs-6 d-flex align-items-center">${m.name} ${managerBadge}</div>
+                                        <div class="text-muted small mt-1" style="font-size: 0.8rem;">Room: ${m.room}</div>
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary bg-opacity-75 rounded-pill px-3 py-2 fs-6 shadow-sm">${m.totalMeals}</span>
+                                    </td>
+                                    
+                                    <td class="text-end fw-medium align-middle">${mealCostUI}</td>
+                                    
+                                    <td class="text-end fw-bold text-primary align-middle">৳${m.depositedAmount.toFixed(2)}</td>
+                                    
+                                    <td class="text-end px-3 fs-6 ${balClass} align-middle">
+                                        ${statusText}: ৳${Math.abs(m.balance).toFixed(2)}
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        document.getElementById('table-report').innerHTML = tbody;
+                    } else {
+                        showError(json.message || "❌ লিংকটি বাতিল বা মেয়াদোত্তীর্ণ করা হয়েছে!");
+                    }
+                })
+                .catch(err => {
+                    showError("❌ সার্ভারে কানেক্ট করা যাচ্ছে না! ইন্টারনেট চেক করুন।");
+                });
+        }
+
+        function showError(msg) {
+            document.getElementById('loading-spinner').classList.add('d-none');
+            const errDiv = document.getElementById('error-msg');
+            errDiv.innerText = msg;
+            errDiv.classList.remove('d-none');
+        }
+
+        function downloadReportPDF() {
+            window.print();
+        }
+
+        // 🛠️ ফিক্সড এক্সেল ডাউনলোড ফাংশন
+        function exportReportToExcel() {
+            if (!reportData || !reportData.members) return Swal.fire('Oops!', 'ডেটা লোড হয়নি!', 'warning');
+
+            // এক্সেলে আমরা ডাটা অ্যানালাইসিসের সুবিধার্থে রুম নাম্বারকে আলাদা কলামেই রাখবো
+            let tableHTML = '<table border="1" style="border-collapse: collapse; text-align: center; font-family: Arial, sans-serif;">';
+            tableHTML += '<thead><tr>';
+            tableHTML += '<th style="background-color: #0d6efd; color: white; padding: 10px;">MEMBER NAME</th>';
+            tableHTML += '<th style="background-color: #0d6efd; color: white; padding: 10px;">ROOM</th>';
+            tableHTML += '<th style="background-color: #0d6efd; color: white; padding: 10px;">TOTAL MEALS</th>';
+            tableHTML += '<th style="background-color: #0d6efd; color: white; padding: 10px;">MEAL COST</th>';
+            tableHTML += '<th style="background-color: #0d6efd; color: white; padding: 10px;">DEPOSITED</th>';
+            tableHTML += '<th style="background-color: #0d6efd; color: white; padding: 10px;">FINAL BALANCE</th>';
+            tableHTML += '<th style="background-color: #0d6efd; color: white; padding: 10px;">STATUS</th>';
+            tableHTML += '</tr></thead><tbody>';
+
+            reportData.members.forEach(member => {
+                const isDue = member.balance < 0;
+                const statusText = isDue ? 'Due' : 'Advance';
+                const color = isDue ? '#dc3545' : '#198754';
+                const mName = member.isManager ? `${member.name} (Manager)` : member.name;
+
+                tableHTML += '<tr>';
+                tableHTML += '<td style="text-align: left; padding: 8px;"><b>' + mName + '</b></td>';
+                tableHTML += '<td style="padding: 8px;">' + member.room + '</td>';
+                tableHTML += '<td style="padding: 8px;">' + member.totalMeals + '</td>';
+                tableHTML += '<td style="padding: 8px;">৳' + member.payableAmount.toFixed(2) + '</td>';
+                tableHTML += '<td style="padding: 8px;">৳' + member.depositedAmount.toFixed(2) + '</td>';
+                tableHTML += '<td style="color: ' + color + '; font-weight: bold; padding: 8px;">৳' + Math.abs(member.balance).toFixed(2) + '</td>';
+                tableHTML += '<td style="color: ' + color + '; font-weight: bold; padding: 8px;">' + statusText + '</td>';
+                tableHTML += '</tr>';
+            });
+
+            tableHTML += '</tbody></table>';
+
+            const blob = new Blob(['\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            const niceDate = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+            link.download = "Mess_Report_Public_" + niceDate + ".xls";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+/* Custom base styles */
+body {
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* font-family: 'Noto Sans Bengali', system-ui, -apple-system, sans-serif; */
+}
+
+/* Navbar styling */
+.navbar {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* Card styling */
+.card {
+    border-radius: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.1)!important;
+}
+
+/* Form inputs */
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+/* Table styling */
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+
+.table td {
+    padding: 1rem 0.5rem;
+}
+
+/* Utility constraints */
+.max-w-600 {
+    max-width: 600px;
+}
+
+/* Checkbox styling in Add Meal */
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+
+/* Tom Select Dropdown Text Fix */
+        .ts-dropdown .option {
+            font-weight: normal !important; /* ভেতরের আইটেমগুলো নরমাল থাকবে */
+            color: #212529 !important;
+        }
+        .ts-dropdown .optgroup-header {
+            font-weight: bold !important; /* শুধু ক্যাটাগরির নামগুলো বোল্ড থাকবে */
+            font-size: 0.95rem !important;
+            color: #0d6efd !important; /* ক্যাটাগরির নাম সুন্দর নীল রঙের হবে */
+            background-color: #f8f9fa !important; /* হালকা ব্যাকগ্রাউন্ড থাকবে */
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+
+/* Print/PDF Layout Settings */
+@media print {
+    /* বাটন, ড্রপডাউন এবং অপ্রয়োজনীয় জিনিস হাইড করা */
+    button, select, .form-select, .navbar, nav {
+        display: none !important;
+    }
+    /* ব্যাকগ্রাউন্ড কালার যেন পিডিএফে ঠিকমতো আসে */
+    body, .card, .bg-primary, .badge {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    /* পিডিএফের মার্জিন ঠিক করা */
+    @page {
+        margin: 0.5cm;
+    }
+}
+
+/* ========================================== */
+    /* 🖨️ SMART PDF PRINT OPTIMIZATION 🖨️ */
+    /* ========================================== */
+    @media print {
+        body { background-color: #fff !important; }
+        
+        /* বাটন, মেনুবার এবং ফর্ম (ইনপুট বক্স) প্রিন্টে হাইড করা হবে */
+        .navbar, .btn, .nav-btn, form { display: none !important; }
+        
+        .card { border: none !important; box-shadow: none !important; }
+        .shadow-sm { box-shadow: none !important; } 
+        
+        /* ম্যাজিক: ড্যাশবোর্ডের যে পেজটি ওপেন থাকবে, ব্রাউজার অটোমেটিক শুধু সেটিকেই প্রিন্ট করবে! */
+        .view-section:not(.d-none) { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        .d-print-flex { display: flex !important; }
+    }
+
+
+    /* ========================================== */
+/* ✨ PAGE TRANSITION ANIMATION ✨ */
+/* ========================================== */
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* ২০ পিক্সেল নিচ থেকে শুরু হবে */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* একদম সঠিক জায়গায় এসে থামবে */
+    }
+}
+
+/* ম্যাজিক: যখনই কোনো সেকশন ওপেন হবে, তখনই এই অ্যানিমেশনটি প্লে হবে */
+.view-section {
+    animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+
+/* ========================================== */
+/* 💎 PREMIUM DASHBOARD CARDS 💎 */
+/* ========================================== */
+
+.stat-card {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    background: #ffffff;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1;
+}
+
+/* মাউস হোভার ইফেক্ট */
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ম্যাজিক: ব্যাকগ্রাউন্ডের জলছাপ আইকন */
+.stat-card .bg-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -20px;
+    font-size: 6rem;
+    opacity: 0.06;
+    z-index: -1;
+    transition: all 0.3s ease;
+}
+
+/* হোভার করলে আইকন হালকা ঘুরবে */
+.stat-card:hover .bg-icon {
+    transform: scale(1.1) rotate(-10deg);
+    opacity: 0.12;
+}
+
+/* টাইপোগ্রাফি সুন্দর করা */
+.stat-card .card-title-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.stat-card h2 {
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+/* ========================================== */
+/* 📱 MOBILE RESPONSIVE FIXES (REPORT TABLE) */
+/* ========================================== */
+@media (max-width: 768px) {
+    #report .table thead,
+    .table-responsive .table thead {
+        display: table-header-group !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
+
+/* ========================================== */
+/* 🌟 PREMIUM DASHBOARD CARDS (MODERN SAAS) */
+/* ========================================== */
+.premium-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.04) !important;
+}
+.premium-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
+}
+.icon-box {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+/* 📱 Mobile Compact View (Fixed Font Sizes) */
+@media (max-width: 768px) {
+    .premium-card .card-body {
+        padding: 1rem !important; /* প্যাডিং একটু বাড়ানো হয়েছে */
+    }
+    .premium-card .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        margin-right: 0.75rem !important;
+    }
+    .premium-card .icon-box i {
+        font-size: 1.25rem !important;
+    }
+    .premium-card h6 {
+        font-size: 0.75rem !important; /* টাইটেলের সাইজ বড় করা হয়েছে (আগে 0.65rem ছিল) */
+        margin-bottom: 0.2rem !important;
+    }
+    .premium-card h3 {
+        font-size: 1.4rem !important; /* টাকার অ্যামাউন্ট বড় করা হয়েছে (আগে 1.15rem ছিল) */
+    }
+}
+
+/* ========================================== */
+/* 🔒 FIX: FORCE BOLD NUMBERS IN DASHBOARD */
+/* ========================================== */
+.premium-card h3, #text-cash {
+    font-weight: 800 !important;
+}
