@@ -9,6 +9,37 @@ if (!adminToken) {
 let currentMonthlyPrice = 99; // ডিফল্ট প্রাইস
 
 // ==========================================
+// ⏱️ Helper: দিন, মাস, বছর নিখুঁতভাবে হিসাব করার ফাংশন
+// ==========================================
+function formatRemainingTime(endDate) {
+    if (!endDate) return 'Lifetime Access';
+    const end = new Date(endDate);
+    const now = new Date();
+    if (end <= now) return 'Expired';
+
+    let years = end.getFullYear() - now.getFullYear();
+    let months = end.getMonth() - now.getMonth();
+    let days = end.getDate() - now.getDate();
+
+    if (days < 0) {
+        months -= 1;
+        const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0).getDate();
+        days += prevMonth;
+    }
+    if (months < 0) {
+        years -= 1;
+        months += 12;
+    }
+
+    let parts = [];
+    if (years > 0) parts.push(`${years} Year${years > 1 ? 's' : ''}`);
+    if (months > 0) parts.push(`${months} Month${months > 1 ? 's' : ''}`);
+    if (days > 0) parts.push(`${days} Day${days > 1 ? 's' : ''}`);
+
+    return parts.length > 0 ? parts.join(', ') : 'Expires Today';
+}
+
+// ==========================================
 // 📊 ১. ড্যাশবোর্ড লোড এবং ডেটা আনা
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,29 +71,52 @@ async function loadDashboardData() {
     }
 }
 
-function updateAnalytics(messes) {
+// ==========================================
+// 📊 অ্যানালিটিক্স আপডেট এবং রিয়েল রেভিনিউ হিসাব
+// ==========================================
+async function updateAnalytics(messes) {
     const totalMesses = messes.length;
     const premiumMesses = messes.filter(m => m.subscriptionStatus === 'active' && m.trialEndsAt).length;
     const trialMesses = messes.filter(m => m.subscriptionStatus === 'trial').length;
     
-    // 🚀 এখন আর ৯৯ নয়, ডাটাবেস থেকে আসা ডায়নামিক প্রাইস গুণ হবে
-    const estimatedRevenue = premiumMesses * currentMonthlyPrice; 
+    let realRevenue = 0;
 
+    try {
+        // 🚀 ডাটাবেস থেকে আসল ট্রানজেকশন হিস্ট্রি টেনে আনা হচ্ছে
+        const res = await fetch(`${API_BASE_URL}/admin/transactions`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+        
+        if (data.success && data.data) {
+            // ম্যাজিক: যতগুলো সফল পেমেন্ট আছে, সবগুলোর 'amount' একসাথে যোগ করা হচ্ছে
+            realRevenue = data.data.reduce((total, trx) => {
+                return total + (trx.status === 'Success' ? trx.amount : 0);
+            }, 0);
+        }
+    } catch (error) {
+        console.error("Error fetching real revenue:", error);
+    }
+
+    // ড্যাশবোর্ডের কার্ডগুলোতে ডেটা বসানো
     document.querySelectorAll('.stat-value')[0].innerText = totalMesses;
     document.querySelectorAll('.stat-value')[1].innerText = premiumMesses;
     document.querySelectorAll('.stat-value')[2].innerText = trialMesses;
-    document.querySelectorAll('.stat-value')[3].innerText = `৳${estimatedRevenue}`;
+    document.querySelectorAll('.stat-value')[3].innerText = `৳${realRevenue}`;
 }
 
 // ==========================================
 // 📋 ২. মেস লিস্ট (টেবিল) রেন্ডার করা
+// ==========================================
+// ==========================================
+// 📊 Dashboard Overview: মেস টেবিল রেন্ডার করা
 // ==========================================
 function renderMessTable(messes) {
     const tbody = document.querySelector('.table tbody');
     tbody.innerHTML = '';
 
     if (messes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">কোনো মেস পাওয়া যায়নি।</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">কোনো মেস পাওয়া যায়নি।</td></tr>';
         return;
     }
 
@@ -74,23 +128,26 @@ function renderMessTable(messes) {
         const joinDate = new Date(mess.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         
         let statusBadge = '';
-        let isBlocked = false; // 🚀 ব্লক চেক করার ভেরিয়েবল
+        let expiryText = ''; // 🚀 মেয়াদের টেক্সট রাখার জন্য নতুন ভেরিয়েবল
+        let isBlocked = false; 
 
+        // 🚀 স্ট্যাটাস এবং নতুন মেয়াদ (দিন, মাস, বছর) হিসাব করা হচ্ছে
         if (isFreeMode) {
             statusBadge = `<span class="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1">Free Lifetime</span>`;
+            expiryText = `Unlimited Access`;
         } else if (isPremium) {
             statusBadge = `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Premium Pro</span>`;
+            expiryText = `${formatRemainingTime(mess.trialEndsAt)} Left`;
         } else if (isTrial) {
-            let daysLeft = 'Expired';
-            if (mess.trialEndsAt) {
-                const diffDays = Math.ceil((new Date(mess.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24));
-                if (diffDays > 0) {
-                    daysLeft = `${diffDays} Days Left`;
-                } else {
-                    isBlocked = true; // সময় শেষ মানে সে ব্লকড বা লকড!
-                }
+            let diffDays = Math.ceil((new Date(mess.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) {
+                statusBadge = `<span class="badge bg-warning bg-opacity-10 text-dark px-2 py-1 border border-warning">Trial Active</span>`;
+                expiryText = `${formatRemainingTime(mess.trialEndsAt)} Left`;
+            } else {
+                isBlocked = true; 
+                statusBadge = `<span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 border border-danger">Expired</span>`;
+                expiryText = `Access Locked`;
             }
-            statusBadge = `<span class="badge ${isBlocked ? 'bg-danger text-white' : 'bg-warning text-dark'} bg-opacity-10 border border-${isBlocked ? 'danger' : 'warning'} px-2 py-1">Trial (${daysLeft})</span>`;
         }
 
         // 🚀 বাটন লজিক: ব্লক থাকলে Unblock বাটন, নাহলে Block বাটন
@@ -108,7 +165,10 @@ function renderMessTable(messes) {
                     <div>${mess.messEmail}</div>
                     <div class="small text-muted">ID: ${mess._id.slice(-6).toUpperCase()}</div>
                 </td>
-                <td>${statusBadge}</td>
+                <td>
+                    <div>${statusBadge}</div>
+                    <div class="small text-muted mt-1" style="font-size: 0.75rem;"><i class="bi bi-clock-history me-1"></i>${expiryText}</div>
+                </td>
                 <td class="text-end">${actionButton}</td>
             </tr>
         `;
@@ -368,3 +428,427 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDashboardData();
     loadPricing(); // নতুন লাইন
 });
+
+// ==========================================
+// 🔄 ৮. Tab Switching Logic (SPA)
+// ==========================================
+window.switchTab = function(tabId, element) {
+    // সব সেকশন হাইড করো
+    document.querySelectorAll('.content-section').forEach(sec => sec.style.display = 'none');
+    
+    // শুধু সিলেক্ট করা সেকশন দেখাও
+    document.getElementById(tabId + '-section').style.display = 'block';
+
+    // সাইডবার মেন্যুর Active কালার চেঞ্জ করো
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    if (element) element.classList.add('active');
+
+    // মোবাইলে সাইডবার ওপেন থাকলে তা বন্ধ করে দাও
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar && sidebar.classList.contains('show')) {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('show');
+    }
+
+    // ট্যাবে ঢুকলে ডেটা লোড করো
+    if (tabId === 'coupons') loadAllCoupons();
+    if (tabId === 'directory') populateFullDirectory();
+};
+
+// ==========================================
+// 🎟️ ৯. Load All Coupons
+// ==========================================
+async function loadAllCoupons() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/coupons`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+        
+        const tbody = document.querySelector('#coupons-table tbody');
+        tbody.innerHTML = '';
+        
+        if (data.success && data.data.length > 0) {
+            data.data.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold text-primary">${c.code}</td>
+                        <td class="fw-bold">${c.discountAmount}</td>
+                        <td><span class="badge bg-secondary">${c.discountType.toUpperCase()}</span></td>
+                        <td class="text-end"><span class="badge bg-${c.isActive ? 'success' : 'danger'}">${c.isActive ? 'Active' : 'Disabled'}</span></td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No coupons found.</td></tr>';
+        }
+    } catch (error) { console.error(error); }
+}
+
+// Full Directory Table (Overview এর ডেটাই এখানে কপি করা হবে)
+window.populateFullDirectory = function() {
+    const mainTableHTML = document.querySelector('.table tbody').innerHTML;
+    document.querySelector('#full-directory-table tbody').innerHTML = mainTableHTML;
+}
+
+// ==========================================
+// 🚀 Page Router (কোন পেজে কোন ডেটা লোড হবে)
+// ==========================================
+document.addEventListener('DOMContentLoaded', async () => {
+    const path = window.location.pathname;
+
+    // ১. Dashboard Overview পেজ
+    if (path.includes('dashboard.html') || path.endsWith('/admin/')) {
+        if(document.getElementById('admin-price-month')) await loadPricing();
+        loadDashboardData();
+        loadChartData(); // 🚀 নতুন লাইন: চার্ট লোড করো
+    }
+    // ২. Mess Directory পেজ
+    else if (path.includes('directory.html')) {
+        loadDirectoryData();
+    } 
+    // ৩. Coupons & Promos পেজ
+    else if (path.includes('coupons.html')) {
+        loadAllCoupons();
+    }
+    // ৪. Transactions পেজ
+    else if (path.includes('transactions.html')) {
+        loadTransactionsData();
+    }
+});
+
+// ==========================================
+// 🏢 Mess Directory ডেটা লোড করা (আপডেটেড ডিজাইন)
+// ==========================================
+async function loadDirectoryData() {
+    const tbody = document.querySelector('#full-directory-table tbody');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><span class="spinner-border text-primary"></span><div class="mt-2 text-muted small">Loading directory...</div></td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/messes`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+        
+        tbody.innerHTML = '';
+        if (data.success && data.data.length > 0) {
+            data.data.reverse().forEach(mess => {
+                const isFreeMode = mess.subscriptionStatus === 'active' && !mess.trialEndsAt;
+                const isPremium = mess.subscriptionStatus === 'active' && mess.trialEndsAt;
+                const isTrial = mess.subscriptionStatus === 'trial';
+                const joinDate = new Date(mess.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                
+                let statusBadge = '';
+                let expiryText = '';
+                let isBlocked = false;
+
+                // 🚀 স্ট্যাটাস এবং নতুন মেয়াদ হিসাব করা হচ্ছে
+                if (isFreeMode) {
+                    statusBadge = `<span class="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1">Free Lifetime</span>`;
+                    expiryText = `Unlimited Access`;
+                } 
+                else if (isPremium) {
+                    statusBadge = `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Premium Pro</span>`;
+                    expiryText = `${formatRemainingTime(mess.trialEndsAt)} Left`;
+                } 
+                else if (isTrial) {
+                    let diffDays = Math.ceil((new Date(mess.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 0) {
+                        statusBadge = `<span class="badge bg-warning bg-opacity-10 text-dark px-2 py-1 border border-warning">Trial Active</span>`;
+                        expiryText = `${formatRemainingTime(mess.trialEndsAt)} Left`;
+                    } else {
+                        isBlocked = true;
+                        statusBadge = `<span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 border border-danger">Expired</span>`;
+                        expiryText = `Access Locked`;
+                    }
+                }
+
+                let actionBtn = isBlocked 
+                    ? `<button class="btn btn-action btn-success shadow-sm" onclick="unblockMessSub('${mess._id}', '${mess.messName}')">Unblock</button>`
+                    : `<button class="btn btn-action btn-outline-danger shadow-sm" onclick="cancelMessSub('${mess._id}', '${mess.messName}')">Block / Cancel</button>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">${mess.messName}</div>
+                            <div class="small text-muted">Joined: ${joinDate}</div>
+                        </td>
+                        <td>
+                            <div>${mess.messEmail}</div>
+                            <div class="small text-muted">ID: ${mess._id.slice(-6).toUpperCase()}</div>
+                        </td>
+                        <td>
+                            <div>${statusBadge}</div>
+                            <div class="small text-muted mt-1" style="font-size: 0.75rem;"><i class="bi bi-clock-history me-1"></i>${expiryText}</div>
+                        </td>
+                        <td class="text-end">${actionBtn}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-5">কোনো মেস পাওয়া যায়নি।</td></tr>';
+        }
+    } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-5">ডেটা লোড করতে সমস্যা হয়েছে! সার্ভার চেক করুন।</td></tr>';
+    }
+}
+
+// ==========================================
+// 🎟️ Coupons ডেটা লোড করা
+// ==========================================
+async function loadAllCoupons() {
+    const tbody = document.querySelector('#coupons-table tbody');
+    if(!tbody) return;
+    
+    // লোডিং স্পিনার
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><span class="spinner-border text-primary"></span><div class="mt-2 text-muted small">Loading coupons...</div></td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/coupons`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+        
+        tbody.innerHTML = '';
+        if (data.success && data.data.length > 0) {
+            data.data.forEach(c => {
+                const discountIcon = c.discountType === 'percentage' ? '%' : '৳';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><div class="fw-bold text-primary" style="letter-spacing: 1px;">${c.code}</div></td>
+                        <td><div class="fw-bolder text-dark fs-6">${c.discountAmount}${discountIcon}</div></td>
+                        <td><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1">${c.discountType.toUpperCase()}</span></td>
+                        <td class="text-end"><span class="badge bg-${c.isActive ? 'success' : 'danger'} shadow-sm px-2 py-1">${c.isActive ? 'Active' : 'Disabled'}</span></td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-5">কোনো কুপন তৈরি করা হয়নি।</td></tr>';
+        }
+    } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-5">ডেটা লোড করতে সমস্যা হয়েছে!</td></tr>';
+    }
+}
+
+// ==========================================
+// 💳 Transactions ডেটা লোড করা
+// ==========================================
+async function loadTransactionsData() {
+    const tbody = document.querySelector('#transactions-table tbody');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><span class="spinner-border text-primary"></span><div class="mt-2 text-muted small">Loading transactions...</div></td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/transactions`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+        
+        tbody.innerHTML = '';
+        if (data.success && data.data.length > 0) {
+            data.data.forEach(trx => {
+                const date = new Date(trx.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                tbody.innerHTML += `
+                    <tr>
+                        <td><div class="fw-bold text-secondary" style="font-family: monospace;">${trx.trxId}</div></td>
+                        <td><div class="fw-bold text-dark">${trx.messName}</div></td>
+                        <td><div class="fw-bolder text-success fs-6">৳${trx.amount}</div></td>
+                        <td><div class="text-muted small">${date}</div></td>
+                        <td class="text-end"><span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">${trx.status}</span></td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-5"><i class="bi bi-receipt fs-1 d-block mb-2 opacity-50"></i>No transaction data available yet.</td></tr>';
+        }
+    } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-5">Error loading transactions!</td></tr>';
+    }
+}
+
+// কুপন তৈরি করা
+window.createCoupon = async function(e) {
+    e.preventDefault();
+    const btn = e.target;
+    const code = document.getElementById('coupon-code').value.trim();
+    const amount = document.getElementById('coupon-amount').value;
+    const type = document.getElementById('coupon-type').value;
+    const limit = document.getElementById('coupon-limit').value;
+    const expiry = document.getElementById('coupon-expiry').value;
+
+    if(!code || !amount || !limit || !expiry) {
+        Swal.fire('Error', 'Please fill all coupon fields.', 'error');
+        return;
+    }
+
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/coupons`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+            body: JSON.stringify({ code, discountAmount: amount, discountType: type, usageLimit: limit, expiresAt: expiry })
+        });
+        const data = await res.json();
+        if(data.success) {
+            Swal.fire('Created!', data.message, 'success');
+            document.getElementById('coupon-code').value = '';
+            document.getElementById('coupon-amount').value = '';
+            document.getElementById('coupon-limit').value = '';
+            document.getElementById('coupon-expiry').value = '';
+        } else {
+            Swal.fire('Error', data.message, 'error');
+        }
+    } catch(err) {
+        Swal.fire('Error', 'Server connection failed', 'error');
+    } finally {
+        btn.innerHTML = '<i class="bi bi-plus-circle me-2"></i> Generate';
+    }
+};
+
+// কুপন ডিলিট করা
+window.deleteCoupon = async function(id) {
+    const { isConfirmed } = await Swal.fire({
+        title: 'Delete Coupon?',
+        text: "This action cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Yes, Delete!'
+    });
+
+    if (isConfirmed) {
+        try {
+            const res = await fetch(`${API_BASE_URL}/admin/coupons/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${adminToken}` }
+            });
+            if(res.ok) {
+                Swal.fire('Deleted!', 'Coupon has been removed.', 'success');
+                loadAllCoupons(); // লিস্ট রিলোড
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Failed to delete coupon', 'error');
+        }
+    }
+};
+
+// কুপন লিস্ট রেন্ডার (টেবিল আপডেট)
+async function loadAllCoupons() {
+    const tbody = document.querySelector('#coupons-table tbody');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/coupons`, { headers: { 'Authorization': `Bearer ${adminToken}` }});
+        const data = await res.json();
+        
+        tbody.innerHTML = '';
+        if (data.success && data.data.length > 0) {
+            data.data.forEach(c => {
+                const discountIcon = c.discountType === 'percentage' ? '%' : '৳';
+                const expiryDate = new Date(c.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const isExpired = new Date() > new Date(c.expiresAt);
+                const isLimitReached = c.usedCount >= c.usageLimit;
+                
+                let statusHtml = `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Active</span>`;
+                if (isExpired) statusHtml = `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">Expired</span>`;
+                else if (isLimitReached) statusHtml = `<span class="badge bg-warning bg-opacity-10 text-dark border border-warning px-2 py-1">Limit Reached</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><div class="fw-bold text-primary" style="letter-spacing: 1px;">${c.code}</div></td>
+                        <td><div class="fw-bolder text-dark fs-6">${c.discountAmount}${discountIcon}</div></td>
+                        <td><div class="text-muted small">${c.usedCount} / ${c.usageLimit} Used</div></td>
+                        <td><div class="text-muted small">${expiryDate}</div></td>
+                        <td>${statusHtml}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCoupon('${c._id}')"><i class="bi bi-trash3-fill"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-5">No coupons available.</td></tr>';
+        }
+    } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-5">Error loading data.</td></tr>';
+    }
+}
+
+// ==========================================
+// 📈 Chart.js: রেভিনিউ এবং গ্রোথ চার্ট রেন্ডার করা
+// ==========================================
+let analyticsChartInstance = null; // ডাবল চার্ট লোড হওয়া আটকাতে
+
+async function loadChartData() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/analytics-chart`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            renderChart(data.labels, data.revenueData, data.messesData);
+        }
+    } catch (error) {
+        console.error('Error loading chart data', error);
+    }
+}
+
+function renderChart(labels, revenueData, messesData) {
+    const ctx = document.getElementById('analyticsChart');
+    if(!ctx) return;
+
+    if (analyticsChartInstance) {
+        analyticsChartInstance.destroy(); // পুরনো গ্রাফ মুছে নতুন গ্রাফ আঁকবে
+    }
+
+    analyticsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Revenue (৳)',
+                    data: revenueData,
+                    borderColor: '#10b981', // সবুজ
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'New Registrations',
+                    data: messesData,
+                    borderColor: '#6366f1', // নীল
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    type: 'linear', display: true, position: 'left',
+                    title: { display: true, text: 'Revenue (৳)' }
+                },
+                y1: {
+                    type: 'linear', display: true, position: 'right',
+                    title: { display: true, text: 'New Messes' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+}
