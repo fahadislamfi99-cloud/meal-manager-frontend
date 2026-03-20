@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initGlobalDates();
     loadAllData();
 
+    if(typeof loadProfileData === 'function') loadProfileData();
+
     // --- Tom Select for Smart Bazar Search ---
     const tempItemSelect = document.getElementById('temp-item-name');
     if (tempItemSelect) {
@@ -26,6 +28,18 @@ document.addEventListener("DOMContentLoaded", () => {
             sortField: [], // ম্যাজিক: এটি ফাঁকা রাখলে HTML এর অরিজিনাল সিরিয়াল ঠিক থাকবে!
             placeholder: "-- বাজার সিলেক্ট করুন বা টাইপ করুন --"
         });
+    }
+
+    // পেমেন্ট স্ট্যাটাস চেক করা (URL থেকে)
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    if (paymentStatus === 'success') {
+        Swal.fire('Premium Unlocked! 🎉', 'আপনার পেমেন্ট সফল হয়েছে। এখন আপনি সব প্রিমিয়াম ফিচার আনলিমিটেড ব্যবহার করতে পারবেন।', 'success');
+        // রিফ্রেশ দিলে যেন আবার পপআপ না আসে তাই URL পরিষ্কার করে দেওয়া
+        window.history.replaceState(null, '', window.location.pathname);
+    } else if (paymentStatus === 'failed') {
+        Swal.fire('Payment Failed!', 'পেমেন্ট সম্পন্ন হয়নি বা ক্যান্সেল করা হয়েছে। দয়া করে আবার চেষ্টা করুন।', 'error');
+        window.history.replaceState(null, '', window.location.pathname);
     }
 });
 
@@ -1590,7 +1604,6 @@ window.resetPublicLink = function() {
 window.loadProfileData = async function() {
     try {
         const token = localStorage.getItem('managerToken') || localStorage.getItem('messToken'); 
-        
         const res = await fetch(`${API_BASE_URL}/auth/profile`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -1598,40 +1611,63 @@ window.loadProfileData = async function() {
         const json = await res.json();
         
         if (json.success && json.data) {
-            // প্রোফাইল ইনফো সেট করা
             document.getElementById('profile-name').value = json.data.messName || '';
             document.getElementById('profile-email').value = json.data.messEmail || '';
 
-            // 🚀 ম্যাজিক: Billing ও Subscription ইনফো সেট করা
-            const subStatus = json.data.subscriptionStatus || localStorage.getItem('subscriptionStatus') || 'trial';
-            const trialEndsAt = json.data.trialEndsAt || localStorage.getItem('trialEndsAt');
+            const subStatus = json.data.subscriptionStatus || 'trial';
+            const trialEndsAt = json.data.trialEndsAt;
+            
+            localStorage.setItem('subscriptionStatus', subStatus);
+            if(trialEndsAt) localStorage.setItem('trialEndsAt', trialEndsAt);
             
             const planNameEl = document.getElementById('profile-plan-name');
             const planStatusEl = document.getElementById('profile-plan-status');
             const planExpiryEl = document.getElementById('profile-plan-expiry');
+            const upgradeBtn = document.querySelector('button[onclick="showUpgradeModal()"]');
 
-            if (subStatus === 'active') {
-                // পেমেন্ট করা থাকলে
-                planNameEl.innerText = 'Premium Pro';
-                planNameEl.className = 'fw-bolder text-success fs-5';
-                planStatusEl.innerText = 'Active';
-                planStatusEl.className = 'badge bg-success text-white px-2 py-1 shadow-sm';
-                planExpiryEl.innerText = 'Lifetime / Auto-renew';
-            } else {
-                // ফ্রি ট্রায়ালে থাকলে
-                planNameEl.innerText = 'Free Trial';
-                planNameEl.className = 'fw-bold text-dark fs-5';
+            // 🚀 ম্যাজিক ১: Free Mode চেক (অ্যাক্টিভ কিন্তু মেয়াদ null)
+            if (subStatus === 'active' && !trialEndsAt) {
+                // পুরো "Billing & Subscription" কার্ডটি খুঁজে বের করে ১০০% হাইড করা
+                const allElements = document.querySelectorAll('*');
+                for (let el of allElements) {
+                    if (el.textContent && el.textContent.trim() === 'Billing & Subscription') {
+                        const mainCard = el.closest('.card') || el.parentElement.parentElement;
+                        if (mainCard) mainCard.style.display = 'none'; // কার্ড উধাও!
+                        break;
+                    }
+                }
+                if (upgradeBtn) upgradeBtn.style.display = 'none';
+            } 
+            // 🚀 ম্যাজিক ২: Premium Mode
+            else if (subStatus === 'active' && trialEndsAt) {
+                if(planNameEl) {
+                    planNameEl.innerText = 'Premium Pro';
+                    planNameEl.className = 'fw-bolder text-success fs-5';
+                }
+                if(planStatusEl) {
+                    planStatusEl.innerText = 'Active';
+                    planStatusEl.className = 'badge bg-success text-white px-2 py-1 shadow-sm';
+                }
+                if(planExpiryEl) {
+                    const expiryDate = new Date(trialEndsAt);
+                    planExpiryEl.innerText = expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                }
+                if(upgradeBtn) upgradeBtn.style.display = 'none'; 
+            } 
+            // 🚀 ম্যাজিক ৩: Free Trial Mode
+            else {
+                if(planNameEl) {
+                    planNameEl.innerText = 'Free Trial';
+                    planNameEl.className = 'fw-bold text-dark fs-5';
+                }
+                if(upgradeBtn) upgradeBtn.style.display = 'block'; 
                 
-                if (trialEndsAt) {
+                if (trialEndsAt && planExpiryEl && planStatusEl) {
                     const trialDate = new Date(trialEndsAt);
                     const today = new Date();
-                    
-                    // তারিখ সুন্দর করে সাজানো (যেমন: 15 Oct, 2026)
                     planExpiryEl.innerText = trialDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
                     
-                    // কয়দিন বাকি হিসাব করা
                     const diffDays = Math.ceil((trialDate - today) / (1000 * 60 * 60 * 24));
-                    
                     if (diffDays > 0) {
                         planStatusEl.innerText = `${diffDays} Days Left`;
                         planStatusEl.className = 'badge bg-warning text-dark px-2 py-1 shadow-sm';
@@ -1790,61 +1826,214 @@ function lockAppUI() {
     });
 }
 
-// 🚀 প্যাকেজ সিলেক্ট এবং পেমেন্ট মোডাল
-window.showUpgradeModal = function() {
+// 🚀 প্যাকেজ সিলেক্ট, ডায়নামিক প্রাইস এবং প্রফেশনাল পেমেন্ট মোডাল
+window.showUpgradeModal = async function() {
+    
+    // ১. প্রথমে ডাটাবেস থেকে লাইভ প্রাইস নিয়ে আসার জন্য একটি ছোট লোডিং দেখানো হবে
     Swal.fire({
-        title: 'Upgrade to Premium 🚀',
+        title: 'Please wait...',
+        text: 'Loading premium packages',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    let monthPrice = 99; // ডিফল্ট
+    let yearPrice = 999; // ডিফল্ট
+
+    try {
+        // 🚀 অ্যাডমিনের সেট করা নতুন দাম সার্ভার থেকে টেনে আনা হচ্ছে
+        const res = await fetch(`${API_BASE_URL}/admin/pricing`);
+        const data = await res.json();
+        if (data.success && data.data) {
+            monthPrice = data.data.monthlyPrice;
+            yearPrice = data.data.yearlyPrice;
+        }
+    } catch (error) {
+        console.error("Failed to fetch pricing, using defaults.");
+    }
+
+    // ২. এবার আসল মোডালটি দেখানো হবে ডায়নামিক প্রাইস সহ
+    Swal.fire({
+        title: '<i class="bi bi-shield-lock text-primary me-2"></i> Premium Upgrade',
         html: `
-            <p class="text-muted small mb-3">মেস ম্যানেজারের সব প্রিমিয়াম ফিচার আনলক করতে আপনার পছন্দমতো প্যাকেজ বেছে নিন।</p>
+            <p class="text-muted small mb-4">Unlock all features with our secured billing system.</p>
             
-            <div class="row g-2 mb-3">
+            <div class="row g-2 mb-4">
                 <div class="col-6">
-                    <div class="border rounded p-2 text-center" style="cursor: pointer; background: #f8fafc; border-color: #cbd5e1;" onclick="document.getElementById('pkg-month').checked = true;">
-                        <input class="form-check-input mb-2" type="radio" name="package" id="pkg-month" value="99" checked>
-                        <div class="fw-bold text-dark">1 Month</div>
-                        <div class="badge bg-primary mt-1 fs-6">৳99</div>
+                    <div class="border rounded p-3 text-center package-card" id="card-month" style="cursor: pointer; border-color: #6366f1; background-color: #f8fafc; transition: 0.3s;" onclick="selectPackage(${monthPrice}, 'card-month')">
+                        <input class="form-check-input d-none" type="radio" name="package" id="pkg-month" value="${monthPrice}" checked>
+                        <div class="fw-bold text-dark"><i class="bi bi-calendar-event me-1"></i> 1 Month</div>
+                        <div class="fs-5 fw-bolder mt-2 text-primary">৳${monthPrice}</div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="border rounded p-2 text-center position-relative" style="cursor: pointer; background: #eff6ff; border-color: #3b82f6;" onclick="document.getElementById('pkg-year').checked = true;">
-                        <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-danger shadow-sm" style="font-size: 0.65rem;">Save 17%</span>
-                        <input class="form-check-input mb-2" type="radio" name="package" id="pkg-year" value="999">
-                        <div class="fw-bold text-dark">1 Year</div>
-                        <div class="badge bg-primary mt-1 fs-6">৳999</div>
+                    <div class="border rounded p-3 text-center position-relative package-card" id="card-year" style="cursor: pointer; border-color: #e2e8f0; background-color: #ffffff; transition: 0.3s;" onclick="selectPackage(${yearPrice}, 'card-year')">
+                        <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-danger shadow-sm" style="font-size: 0.65rem;">Best Value</span>
+                        <input class="form-check-input d-none" type="radio" name="package" id="pkg-year" value="${yearPrice}">
+                        <div class="fw-bold text-dark"><i class="bi bi-calendar3 me-1"></i> 1 Year</div>
+                        <div class="fs-5 fw-bolder mt-2 text-muted">৳${yearPrice}</div>
                     </div>
                 </div>
             </div>
-            
-            <div class="mt-3 p-3 bg-white rounded border text-center shadow-sm">
-                <p class="mb-1 fw-bold text-dark d-flex align-items-center justify-content-center">
-                    <img src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" height="20" class="me-2"> 
-                    bKash Merchant (Payment)
-                </p>
-                <h5 class="fw-bolder tracking-widest text-danger mb-0">01XXXXXXXXX</h5> </div>
-            
-            <div class="text-start mt-3">
-                <label class="form-label small fw-bold">Enter Transaction ID (TrxID)</label>
-                <input type="text" id="trx-id-input" class="form-control text-center fw-bold tracking-widest text-uppercase" placeholder="e.g. 9JA7GKT2Y" style="border: 2px dashed #ccc;">
+
+            <div class="mb-4 text-start">
+                <label class="form-label small fw-bold text-secondary"><i class="bi bi-tags me-1"></i> Have a Promo Code?</label>
+                <div class="input-group shadow-sm">
+                    <input type="text" id="promo-code" class="form-control text-uppercase fw-bold" placeholder="Enter code" style="border-right: none;">
+                    <button class="btn btn-dark px-3 fw-bold" type="button" id="apply-btn" onclick="applyPromo()">Apply</button>
+                </div>
+                <div id="promo-message" class="small mt-2 fw-semibold" style="display: none;"></div>
             </div>
-            <p class="text-muted mt-2" style="font-size: 0.7rem;">* বিকাশ API লাইভ হওয়ার পর পেমেন্ট অটোমেটিক ভেরিফাই হবে।</p>
+
+            <div class="border rounded p-3 text-start mb-2" style="background-color: #f8fafc;">
+                <div class="d-flex justify-content-between small mb-2 text-muted">
+                    <span>Subtotal</span>
+                    <span class="fw-bold" id="summary-subtotal">৳${monthPrice}</span>
+                </div>
+                <div class="d-flex justify-content-between small mb-2 text-success" id="summary-discount-row" style="display: none !important;">
+                    <span><i class="bi bi-check-circle-fill me-1"></i> Discount Applied</span>
+                    <span class="fw-bold" id="summary-discount">-৳0</span>
+                </div>
+                <hr class="my-2 text-muted">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-dark">Total Payable</span>
+                    <span class="fw-bolder fs-5 text-dark" id="summary-total">৳${monthPrice}</span>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <p class="text-muted mb-0" style="font-size: 0.75rem;"><i class="bi bi-lock-fill text-success"></i> Secure Checkout by bKash</p>
+            </div>
         `,
         showCancelButton: true,
-        confirmButtonColor: '#0f172a',
-        cancelButtonColor: '#e2e8f0',
-        cancelButtonText: '<span class="text-dark">Cancel</span>',
-        confirmButtonText: 'Submit Payment',
-        preConfirm: () => {
-            const trxId = document.getElementById('trx-id-input').value;
-            if (!trxId) Swal.showValidationMessage('দয়া করে bKash Transaction ID দিন!');
-            return trxId;
-        }
+        confirmButtonColor: '#e11471',
+        cancelButtonColor: '#64748b',
+        cancelButtonText: 'Cancel',
+        confirmButtonText: 'Proceed to Pay <i class="bi bi-arrow-right-short fs-5"></i>',
+        showLoaderOnConfirm: true,
+        didOpen: () => {
+            window.selectedPrice = monthPrice; // 🚀 ডাটাবেস থেকে আসা কারেন্ট প্রাইস
+            window.appliedPromo = '';
+            
+            window.selectPackage = function(price, cardId) {
+                window.selectedPrice = price;
+                window.appliedPromo = '';
+                
+                // Reset card styles
+                document.getElementById('card-month').style.borderColor = '#e2e8f0';
+                document.getElementById('card-month').style.backgroundColor = '#ffffff';
+                document.querySelector('#card-month .fs-5').classList.replace('text-primary', 'text-muted');
+
+                document.getElementById('card-year').style.borderColor = '#e2e8f0';
+                document.getElementById('card-year').style.backgroundColor = '#ffffff';
+                document.querySelector('#card-year .fs-5').classList.replace('text-primary', 'text-muted');
+                
+                // Highlight selected card
+                document.getElementById(cardId).style.borderColor = '#6366f1';
+                document.getElementById(cardId).style.backgroundColor = '#f8fafc';
+                document.querySelector(`#${cardId} .fs-5`).classList.replace('text-muted', 'text-primary');
+                
+                // Reset Summary Box
+                document.getElementById('summary-subtotal').innerText = `৳${price}`;
+                document.getElementById('summary-discount-row').style.setProperty('display', 'none', 'important');
+                document.getElementById('summary-total').innerText = `৳${price}`;
+                
+                // Reset Promo Box
+                document.getElementById('promo-code').value = '';
+                document.getElementById('promo-message').style.display = 'none';
+                const btn = document.getElementById('apply-btn');
+                btn.innerText = 'Apply';
+                btn.classList.remove('btn-success', 'btn-danger');
+                btn.classList.add('btn-dark');
+                btn.disabled = false;
+            };
+
+            window.applyPromo = async function() {
+                const code = document.getElementById('promo-code').value.trim();
+                const msgEl = document.getElementById('promo-message');
+                const btn = document.getElementById('apply-btn');
+                
+                if(!code) return;
+                
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                btn.disabled = true;
+
+                try {
+                    const token = localStorage.getItem('messToken') || localStorage.getItem('managerToken');
+                    const res = await fetch(`${API_BASE_URL}/payment/verify-coupon`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ promoCode: code, packagePrice: window.selectedPrice })
+                    });
+                    const data = await res.json();
+                    
+                    if(data.success) {
+                        window.appliedPromo = code;
+                        
+                        btn.innerHTML = '<i class="bi bi-check2"></i>';
+                        btn.classList.replace('btn-dark', 'btn-success');
+                        
+                        msgEl.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${data.message}`;
+                        msgEl.className = 'small mt-2 text-success';
+                        msgEl.style.display = 'block';
+
+                        // Show Live Calculation
+                        document.getElementById('summary-discount-row').style.setProperty('display', 'flex', 'important');
+                        document.getElementById('summary-discount').innerText = `-৳${data.discountAmount}`;
+                        document.getElementById('summary-total').innerText = `৳${data.finalPrice}`;
+                    } else {
+                        btn.innerHTML = 'Apply';
+                        btn.disabled = false;
+                        
+                        msgEl.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> ${data.message}`;
+                        msgEl.className = 'small mt-2 text-danger';
+                        msgEl.style.display = 'block';
+                        
+                        document.getElementById('summary-discount-row').style.setProperty('display', 'none', 'important');
+                        document.getElementById('summary-total').innerText = `৳${window.selectedPrice}`;
+                        window.appliedPromo = '';
+                    }
+                } catch(err) {
+                    btn.innerHTML = 'Apply';
+                    btn.disabled = false;
+                }
+            };
+        },
+        preConfirm: async () => {
+            // 🚀 ম্যাজিক: ক্লিক করার সাথে সাথেই বাটন লোডিং স্টেটে চলে যাবে
+            const confirmBtn = Swal.getConfirmButton();
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connecting bKash...';
+            confirmBtn.disabled = true; // বাটন ডিজেবল করে দেওয়া হলো যাতে ডাবল ক্লিক না পড়ে
+            Swal.getCancelButton().style.display = 'none'; // ক্যানসেল বাটন হাইড
+
+            try {
+                const token = localStorage.getItem('messToken') || localStorage.getItem('managerToken');
+                const res = await fetch(`${API_BASE_URL}/payment/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ packagePrice: window.selectedPrice, promoCode: window.appliedPromo }) 
+                });
+                
+                const data = await res.json();
+                if (res.ok && data.success && data.bkashURL) return data.bkashURL; 
+                else {
+                    confirmBtn.innerHTML = 'Proceed to Pay';
+                    confirmBtn.disabled = false;
+                    Swal.showValidationMessage(data.message || 'Payment failed.');
+                }
+            } catch (error) {
+                confirmBtn.innerHTML = 'Proceed to Pay';
+                confirmBtn.disabled = false;
+                Swal.showValidationMessage('Server connection error!');
+            }
+        },
+        allowOutsideClick: () => !Swal.isLoading()
     }).then((result) => {
-        if (result.isConfirmed) {
-            // আপাতত সাকসেস মেসেজ দেখাচ্ছি, পরে এখানে API কল বসবে
-            Swal.fire('Submitted!', 'আপনার পেমেন্ট ভেরিফাই করা হচ্ছে। কিছুক্ষণের মধ্যেই ড্যাশবোর্ড আনলক হয়ে যাবে।', 'success');
+        if (result.isConfirmed && result.value) {
+            window.location.href = result.value;
         }
     });
-}
+};
 
 // পেজ লোড হওয়ার পর সাবস্ক্রিপশন চেক কল করা
 document.addEventListener("DOMContentLoaded", () => {

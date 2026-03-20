@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Control Room | Mess Manager</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; 
+            color: #334155;
+            overflow-x: hidden;
+        }
+
+        /* 👑 Premium Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: #0f172a; 
+            color: #94a3b8;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: 0.3s ease;
+            z-index: 1050;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #ffffff;
+            border-bottom: 1px solid #1e293b;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-link {
+            color: #94a3b8;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff;
+            background-color: #1e293b;
+            border-right: 4px solid #6366f1; 
+        }
+
+        /* 📊 Main Content Area */
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+            transition: 0.3s ease;
+        }
+
+        /* 📱 Mobile Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1040;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* 💳 Stat Cards */
+        .stat-card {
+            background: #ffffff;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            height: 100%;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-value { font-size: 2rem; font-weight: 800; color: #0f172a; line-height: 1; margin-top: 10px; }
+        .stat-label { font-size: 0.875rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+
+        /* 🎚️ Magic Switch */
+        .magic-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .magic-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: #6366f1; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .table-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); padding: 24px; }
+        .btn-action { padding: 6px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; }
+
+        /* 🚀 Responsive Media Queries (Mobile & Tablet) */
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); } /* Hide sidebar off-screen */
+            .sidebar.show { transform: translateX(0); } /* Show when toggled */
+            .sidebar-overlay.show { display: block; opacity: 1; }
+            .main-content { margin-left: 0; padding: 15px; } /* Full width for content */
+            
+            .header-flex { flex-direction: column; align-items: flex-start !important; gap: 15px; }
+            .magic-switch-box { width: 100%; justify-content: space-between; }
+            
+            .stat-value { font-size: 1.75rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-shield-lock-fill me-2" style="color: #6366f1;"></i> Super Admin</span>
+            <i class="bi bi-x-lg d-lg-none" id="close-sidebar" style="cursor: pointer; color: #64748b;"></i>
+        </div>
+        <div class="mt-4">
+            <a href="#" class="nav-link active"><i class="bi bi-grid-1x2-fill"></i> Overview</a>
+            <a href="#" class="nav-link"><i class="bi bi-buildings-fill"></i> Mess Directory</a>
+            <a href="#" class="nav-link"><i class="bi bi-tags-fill"></i> Coupons & Promos</a>
+            <a href="#" class="nav-link"><i class="bi bi-receipt"></i> Transactions</a>
+            <a href="#" class="nav-link text-danger mt-5"><i class="bi bi-box-arrow-left"></i> Secure Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex align-items-center mb-4 d-lg-none">
+            <button class="btn btn-dark border-0 rounded-3 shadow-sm me-3" id="mobile-toggler" style="background-color: #0f172a;">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <h4 class="fw-bold mb-0 text-dark">Dashboard</h4>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 mb-md-5 header-flex">
+            <div class="d-none d-lg-block">
+                <h3 class="fw-bold mb-0 text-dark">Dashboard Overview</h3>
+                <p class="text-muted small mb-0">Welcome back, Boss! Here's what's happening today.</p>
+            </div>
+            
+            <div class="bg-white px-4 py-2 rounded-pill shadow-sm d-flex align-items-center gap-3 border magic-switch-box">
+                <div class="text-end">
+                    <div class="fw-bold text-dark fs-6 lh-sm" id="mode-text">Free Mode</div>
+                    <div class="small text-muted" style="font-size: 0.7rem;">App is open for all</div>
+                </div>
+                <label class="magic-switch">
+                    <input type="checkbox" id="global-magic-switch" onchange="toggleMagicSwitch(this)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="row g-3 g-md-4 mb-4 mb-md-5">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card p-3 p-md-4">
+                    <div class="d-flex justify-content-between flex-column flex-md-row">
+                        <div class="order-2 order-md-1">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label mt-1 mt-md-0" style="font-size: 0.75rem;">Total Messes</div>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary order-1 order-md-2 mb-2 mb-md-0 mx-auto mx-md-0"><i class="bi bi-building"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card p-3 p-md-4">
+                    <div class="d-flex justify-content-between flex-column flex-md-row">
+                        <div class="order-2 order-md-1">
+                            <div class="stat-value text-success">0</div>
+                            <div class="stat-label mt-1 mt-md-0" style="font-size: 0.75rem;">Active Premium</div>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success order-1 order-md-2 mb-2 mb-md-0 mx-auto mx-md-0"><i class="bi bi-star-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card p-3 p-md-4">
+                    <div class="d-flex justify-content-between flex-column flex-md-row">
+                        <div class="order-2 order-md-1">
+                            <div class="stat-value text-warning">0</div>
+                            <div class="stat-label mt-1 mt-md-0" style="font-size: 0.75rem;">In Free Trial</div>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning order-1 order-md-2 mb-2 mb-md-0 mx-auto mx-md-0"><i class="bi bi-clock-history"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card p-3 p-md-4">
+                    <div class="d-flex justify-content-between flex-column flex-md-row">
+                        <div class="order-2 order-md-1">
+                            <div class="stat-value text-dark">৳0</div>
+                            <div class="stat-label mt-1 mt-md-0" style="font-size: 0.75rem;">Total Revenue</div>
+                        </div>
+                        <div class="stat-icon bg-success text-white shadow-sm order-1 order-md-2 mb-2 mb-md-0 mx-auto mx-md-0"><i class="bi bi-currency-dollar"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="table-card p-3 p-md-4">
+                    <h5 class="fw-bold mb-3 d-flex justify-content-between align-items-center fs-6 fs-md-5">
+                        Recent Registrations
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" style="min-width: 600px;">
+                            <thead>
+                                <tr>
+                                    <th>Mess Name</th>
+                                    <th>Manager Contact</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="table-card bg-indigo-50 p-3 p-md-4" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <h5 class="fw-bold mb-3 fs-6 fs-md-5"><i class="bi bi-ticket-perforated-fill text-primary me-2"></i> Create Coupon</h5>
+                    <p class="small text-muted mb-4">Generate promo codes for marketing campaigns.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Coupon Code</label>
+                        <input type="text" class="form-control text-uppercase fw-bold tracking-widest" placeholder="e.g. EID50">
+                    </div>
+                    <div class="row g-2 mb-4">
+                        <div class="col-7">
+                            <label class="form-label small fw-bold">Discount Amount</label>
+                            <input type="number" class="form-control" placeholder="e.g. 50">
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label small fw-bold">Type</label>
+                            <select class="form-select">
+                                <option>Flat (৳)</option>
+                                <option>Percent (%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100 fw-bold py-2"><i class="bi bi-plus-circle me-2"></i> Generate</button>
+                </div>
+            </div>
+
+            <div class="table-card mt-4 p-3 p-md-4" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+                <h5 class="fw-bold mb-3 fs-6 fs-md-5"><i class="bi bi-gear-fill text-dark me-2"></i> Price Control</h5>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">1 Month (৳)</label>
+                        <input type="number" id="admin-price-month" class="form-control fw-bold text-primary text-center">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">1 Year (৳)</label>
+                        <input type="number" id="admin-price-year" class="form-control fw-bold text-primary text-center">
+                    </div>
+                </div>
+                <button class="btn btn-dark w-100 fw-bold py-2" onclick="updateAdminPricing()"><i class="bi bi-floppy-fill me-2"></i> Save Pricing</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const mobileToggler = document.getElementById('mobile-toggler');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+
+        function openSidebar() {
+            sidebar.classList.add('show');
+            overlay.classList.add('show');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        }
+
+        if(mobileToggler) mobileToggler.addEventListener('click', openSidebar);
+        if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+        if(overlay) overlay.addEventListener('click', closeSidebar);
+    </script>
+
+    <script src="admin.js"></script>
+</body>
+</html>
