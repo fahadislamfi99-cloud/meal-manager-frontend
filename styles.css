@@ -24,16 +24,18 @@ body {
 
 .stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.1)!important;
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1) !important;
 }
 
 /* Form inputs */
-.form-control, .form-select {
+.form-control,
+.form-select {
     border-radius: 8px;
     padding: 0.6rem 1rem;
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
 }
 
@@ -63,31 +65,46 @@ body {
 
 
 /* Tom Select Dropdown Text Fix */
-        .ts-dropdown .option {
-            font-weight: normal !important; /* ভেতরের আইটেমগুলো নরমাল থাকবে */
-            color: #212529 !important;
-        }
-        .ts-dropdown .optgroup-header {
-            font-weight: bold !important; /* শুধু ক্যাটাগরির নামগুলো বোল্ড থাকবে */
-            font-size: 0.95rem !important;
-            color: #0d6efd !important; /* ক্যাটাগরির নাম সুন্দর নীল রঙের হবে */
-            background-color: #f8f9fa !important; /* হালকা ব্যাকগ্রাউন্ড থাকবে */
-            padding-top: 8px;
-            padding-bottom: 8px;
-        }
+.ts-dropdown .option {
+    font-weight: normal !important;
+    /* ভেতরের আইটেমগুলো নরমাল থাকবে */
+    color: #212529 !important;
+}
+
+.ts-dropdown .optgroup-header {
+    font-weight: bold !important;
+    /* শুধু ক্যাটাগরির নামগুলো বোল্ড থাকবে */
+    font-size: 0.95rem !important;
+    color: #0d6efd !important;
+    /* ক্যাটাগরির নাম সুন্দর নীল রঙের হবে */
+    background-color: #f8f9fa !important;
+    /* হালকা ব্যাকগ্রাউন্ড থাকবে */
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
 
 
 /* Print/PDF Layout Settings */
 @media print {
+
     /* বাটন, ড্রপডাউন এবং অপ্রয়োজনীয় জিনিস হাইড করা */
-    button, select, .form-select, .navbar, nav {
+    button,
+    select,
+    .form-select,
+    .navbar,
+    nav {
         display: none !important;
     }
+
     /* ব্যাকগ্রাউন্ড কালার যেন পিডিএফে ঠিকমতো আসে */
-    body, .card, .bg-primary, .badge {
+    body,
+    .card,
+    .bg-primary,
+    .badge {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+
     /* পিডিএফের মার্জিন ঠিক করা */
     @page {
         margin: 0.5cm;
@@ -95,35 +112,59 @@ body {
 }
 
 /* ========================================== */
-    /* 🖨️ SMART PDF PRINT OPTIMIZATION 🖨️ */
-    /* ========================================== */
-    @media print {
-        body { background-color: #fff !important; }
-        
-        /* বাটন, মেনুবার এবং ফর্ম (ইনপুট বক্স) প্রিন্টে হাইড করা হবে */
-        .navbar, .btn, .nav-btn, form { display: none !important; }
-        
-        .card { border: none !important; box-shadow: none !important; }
-        .shadow-sm { box-shadow: none !important; } 
-        
-        /* ম্যাজিক: ড্যাশবোর্ডের যে পেজটি ওপেন থাকবে, ব্রাউজার অটোমেটিক শুধু সেটিকেই প্রিন্ট করবে! */
-        .view-section:not(.d-none) { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
-        .d-print-flex { display: flex !important; }
+/* 🖨️ SMART PDF PRINT OPTIMIZATION 🖨️ */
+/* ========================================== */
+@media print {
+    body {
+        background-color: #fff !important;
     }
 
+    /* বাটন, মেনুবার এবং ফর্ম (ইনপুট বক্স) প্রিন্টে হাইড করা হবে */
+    .navbar,
+    .btn,
+    .nav-btn,
+    form {
+        display: none !important;
+    }
 
-    /* ========================================== */
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .shadow-sm {
+        box-shadow: none !important;
+    }
+
+    /* ম্যাজিক: ড্যাশবোর্ডের যে পেজটি ওপেন থাকবে, ব্রাউজার অটোমেটিক শুধু সেটিকেই প্রিন্ট করবে! */
+    .view-section:not(.d-none) {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .d-print-flex {
+        display: flex !important;
+    }
+}
+
+
+/* ========================================== */
 /* ✨ PAGE TRANSITION ANIMATION ✨ */
 /* ========================================== */
 
 @keyframes fadeSlideUp {
     from {
         opacity: 0;
-        transform: translateY(20px); /* ২০ পিক্সেল নিচ থেকে শুরু হবে */
+        transform: translateY(20px);
+        /* ২০ পিক্সেল নিচ থেকে শুরু হবে */
     }
+
     to {
         opacity: 1;
-        transform: translateY(0); /* একদম সঠিক জায়গায় এসে থামবে */
+        transform: translateY(0);
+        /* একদম সঠিক জায়গায় এসে থামবে */
     }
 }
 
@@ -186,6 +227,7 @@ body {
 /* 📱 MOBILE RESPONSIVE FIXES (REPORT TABLE) */
 /* ========================================== */
 @media (max-width: 768px) {
+
     #report .table thead,
     .table-responsive .table thead {
         display: table-header-group !important;
@@ -199,12 +241,14 @@ body {
 /* ========================================== */
 .premium-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(0,0,0,0.04) !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
 }
+
 .premium-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06) !important;
 }
+
 .icon-box {
     width: 46px;
     height: 46px;
@@ -217,29 +261,89 @@ body {
 /* 📱 Mobile Compact View (Fixed Font Sizes) */
 @media (max-width: 768px) {
     .premium-card .card-body {
-        padding: 1rem !important; /* প্যাডিং একটু বাড়ানো হয়েছে */
+        padding: 1rem !important;
+        /* প্যাডিং একটু বাড়ানো হয়েছে */
     }
+
     .premium-card .icon-box {
         width: 40px;
         height: 40px;
         border-radius: 10px;
         margin-right: 0.75rem !important;
     }
+
     .premium-card .icon-box i {
         font-size: 1.25rem !important;
     }
+
     .premium-card h6 {
-        font-size: 0.75rem !important; /* টাইটেলের সাইজ বড় করা হয়েছে (আগে 0.65rem ছিল) */
+        font-size: 0.75rem !important;
+        /* টাইটেলের সাইজ বড় করা হয়েছে (আগে 0.65rem ছিল) */
         margin-bottom: 0.2rem !important;
     }
+
     .premium-card h3 {
-        font-size: 1.4rem !important; /* টাকার অ্যামাউন্ট বড় করা হয়েছে (আগে 1.15rem ছিল) */
+        font-size: 1.4rem !important;
+        /* টাকার অ্যামাউন্ট বড় করা হয়েছে (আগে 1.15rem ছিল) */
     }
 }
 
 /* ========================================== */
 /* 🔒 FIX: FORCE BOLD NUMBERS IN DASHBOARD */
 /* ========================================== */
-.premium-card h3, #text-cash {
+.premium-card h3,
+#text-cash {
     font-weight: 800 !important;
 }
+
+/* ========================================== */
+/* 🌟 Premium Dashboard Navbar */
+/* ========================================== */
+.dashboard-nav {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 0;
+    backdrop-filter: blur(10px);
+}
+
+.dashboard-nav .navbar-brand {
+    color: #0f172a !important;
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+}
+
+.dashboard-nav .navbar-brand i {
+    color: #4f46e5;
+}
+
+.dashboard-nav .nav-link {
+    color: #64748b !important;
+    font-weight: 600;
+    padding: 8px 16px !important;
+    margin: 0 4px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.dashboard-nav .nav-link:hover {
+    color: #4f46e5 !important;
+    background-color: #f8fafc;
+}
+
+/* 🚀 ম্যাজিক: যে পেজে থাকবেন, সেটা সুন্দর নীল রঙের বাটন হয়ে থাকবে */
+.dashboard-nav .nav-link.active {
+    color: #ffffff !important;
+    background-color: #4f46e5 !important;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+.navbar-toggler {
+    border: none !important;
+    padding: 0;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none !important;
+}
+

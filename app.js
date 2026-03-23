@@ -19,13 +19,13 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAllData();
     loadGlobalNotice();
 
-    if(typeof loadProfileData === 'function') loadProfileData();
+    if (typeof loadProfileData === 'function') loadProfileData();
 
     // --- Tom Select for Smart Bazar Search ---
     const tempItemSelect = document.getElementById('temp-item-name');
     if (tempItemSelect) {
         new TomSelect(tempItemSelect, {
-            create: true, 
+            create: true,
             sortField: [], // ম্যাজিক: এটি ফাঁকা রাখলে HTML এর অরিজিনাল সিরিয়াল ঠিক থাকবে!
             placeholder: "-- বাজার সিলেক্ট করুন বা টাইপ করুন --"
         });
@@ -95,7 +95,7 @@ function updateDateRangeDisplay() {
     // ম্যাজিক: ক্যালকুলেশন মোড (Average/Fixed) ব্যাজে আপডেট করা
     const modeTextEl = document.getElementById('calc-mode-text');
     const calcModeBadge = document.getElementById('display-calc-mode');
-    
+
     if (modeTextEl && calcModeBadge) {
         const currentMode = localStorage.getItem('calcMode') || 'average';
         if (currentMode === 'fixed') {
@@ -109,7 +109,7 @@ function updateDateRangeDisplay() {
 }
 
 // ফিল্টার অ্যাপ্লাই করে ডাটাবেসে সেভ করা এবং ড্যাশবোর্ডে ফিরে যাওয়ার ফাংশন
-window.applyGlobalFilterAndGoHome = async function() {
+window.applyGlobalFilterAndGoHome = async function () {
     globalStartDate = document.getElementById('global-start-date').value;
     globalEndDate = document.getElementById('global-end-date').value;
 
@@ -121,7 +121,7 @@ window.applyGlobalFilterAndGoHome = async function() {
     // বাটনে লোডিং অ্যানিমেশন দেখানো
     const btn = document.querySelector('button[onclick="applyGlobalFilterAndGoHome()"]');
     const origText = btn.innerHTML;
-    if(btn) {
+    if (btn) {
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
         btn.disabled = true;
     }
@@ -137,21 +137,21 @@ window.applyGlobalFilterAndGoHome = async function() {
             })
         });
 
-        updateDateRangeDisplay(); 
-        await loadAllData(); 
-        
+        updateDateRangeDisplay();
+        await loadAllData();
+
         // সাকসেস মেসেজ দেখানো এবং ড্যাশবোর্ডে চলে যাওয়া
         const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
         Toast.fire({ icon: 'success', title: 'Global Period Saved!' });
 
         const dashboardBtn = document.querySelector('.nav-btn[data-target="dashboard"]');
-        if(dashboardBtn) dashboardBtn.click();
+        if (dashboardBtn) dashboardBtn.click();
 
     } catch (error) {
         console.error("Error saving global dates:", error);
         Swal.fire('Error!', 'তারিখ সেভ করতে সমস্যা হয়েছে।', 'error');
     } finally {
-        if(btn) {
+        if (btn) {
             btn.innerHTML = origText;
             btn.disabled = false;
         }
@@ -162,7 +162,7 @@ window.applyGlobalFilterAndGoHome = async function() {
 // --- NAVIGATION LOGIC (With Smart Tab Memory & Time Limit) ---
 function setupNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
-    
+
     // ১. ম্যাজিক: কতক্ষণ আগে ট্যাব সেভ হয়েছিল তা চেক করা (এখানে ১ ঘণ্টা = 3600000 মিলি-সেকেন্ড দেওয়া হয়েছে)
     const savedTime = localStorage.getItem('tabSaveTime');
     const currentTime = new Date().getTime();
@@ -178,32 +178,32 @@ function setupNavigation() {
     }
 
     navButtons.forEach(btn => {
-        
+
         // ২. সেভ করা বা ডিফল্ট ট্যাব অনুযায়ী সঠিক পেজটি ওপেন রাখা
-        if(btn.getAttribute('data-target') === savedTarget) {
+        if (btn.getAttribute('data-target') === savedTarget) {
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('d-none'));
             const targetEl = document.getElementById(savedTarget);
-            if(targetEl) targetEl.classList.remove('d-none');
+            if (targetEl) targetEl.classList.remove('d-none');
         }
 
         // ৩. ক্লিক করার সাথে সাথে নতুন ট্যাবটি এবং "বর্তমান সময়" সেভ করে ফেলা
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const target = btn.getAttribute('data-target');
-            
+
             // ব্রাউজারে ক্লিক করা ট্যাবের নাম এবং সময় সেভ করে রাখা হচ্ছে
             localStorage.setItem('activeTab', target);
             localStorage.setItem('tabSaveTime', new Date().getTime()); // <-- নতুন লাইন
 
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('d-none'));
             document.getElementById(target).classList.remove('d-none');
-            
+
             // মোবাইলের মেনুবার ক্লিক করার পর অটোমেটিক বন্ধ করে দেওয়া
             const navbarCollapse = document.getElementById('navbarNav');
             if (navbarCollapse && navbarCollapse.classList.contains('show')) {
@@ -353,9 +353,9 @@ document.getElementById('form-add-member').addEventListener('submit', async (e) 
         const res = await fetch(`${API_BASE_URL}/members`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                name: e.target[0].value, 
-                room: e.target[1].value, 
+            body: JSON.stringify({
+                name: e.target[0].value,
+                room: e.target[1].value,
                 phone: document.getElementById('add-member-phone').value // নতুন লাইন
             })
         });
@@ -385,7 +385,7 @@ document.getElementById('form-add-member').addEventListener('submit', async (e) 
 // --- SMART BULK BAZAR LOGIC ---
 // ==========================================
 
-let pendingBazarItems = []; 
+let pendingBazarItems = [];
 let currentShopperId = ''; // ম্যাজিক: এখন আমরা নাম নয়, মেম্বারের ID সেভ রাখবো
 let currentShopperName = '';
 let currentBazarDate = '';
@@ -394,18 +394,18 @@ let currentBazarDate = '';
 document.getElementById('btn-start-bazar')?.addEventListener('click', () => {
     const dateInput = document.getElementById('bazar-bulk-date').value;
     const memberSelect = document.getElementById('bazar-bulk-member');
-    
-    if(!dateInput || !memberSelect.value) {
+
+    if (!dateInput || !memberSelect.value) {
         Swal.fire('Oops!', 'দয়া করে তারিখ এবং বাজারকারীর নাম সিলেক্ট করুন!', 'warning');
         return;
     }
 
     currentBazarDate = dateInput;
     currentShopperId = memberSelect.value; // ড্রপডাউন থেকে সরাসরি Object ID নেওয়া হলো
-    currentShopperName = memberSelect.options[memberSelect.selectedIndex].text.split(' (')[0]; 
+    currentShopperName = memberSelect.options[memberSelect.selectedIndex].text.split(' (')[0];
 
     document.getElementById('display-shopper-name').innerText = currentShopperName;
-    
+
     document.getElementById('bazar-step-1').classList.add('d-none');
     document.getElementById('bazar-step-2').classList.remove('d-none');
 });
@@ -419,12 +419,12 @@ document.getElementById('form-add-temp-item')?.addEventListener('submit', (e) =>
     const isDuplicate = pendingBazarItems.some(entry => entry.item === itemName);
     if (isDuplicate) {
         Swal.fire('Oops!', `"${itemName}" লিস্টে আগে থেকেই অ্যাড করা আছে!`, 'warning');
-        return; 
+        return;
     }
 
     pendingBazarItems.push({ item: itemName, amount: amount });
     e.target.reset();
-    
+
     const tomSelectEl = document.getElementById('temp-item-name');
     if (tomSelectEl && tomSelectEl.tomselect) tomSelectEl.tomselect.clear();
 
@@ -437,11 +437,11 @@ function renderPendingBazarTable() {
     const tbody = document.getElementById('temp-bazar-list');
     const tfoot = document.getElementById('temp-bazar-footer');
     const saveBtn = document.getElementById('btn-save-bulk-bazar');
-    
+
     tbody.innerHTML = '';
     let total = 0;
 
-    if(pendingBazarItems.length === 0) {
+    if (pendingBazarItems.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" class="text-muted small py-3">No items added yet.</td></tr>`;
         tfoot.classList.add('d-none');
         saveBtn.disabled = true;
@@ -466,17 +466,17 @@ function renderPendingBazarTable() {
     saveBtn.disabled = false;
 }
 
-window.removeTempItem = function(index) {
+window.removeTempItem = function (index) {
     pendingBazarItems.splice(index, 1);
     renderPendingBazarTable();
 };
 
-window.editBazarInfo = function() {
+window.editBazarInfo = function () {
     document.getElementById('bazar-step-2').classList.add('d-none');
     document.getElementById('bazar-step-1').classList.remove('d-none');
 };
 
-window.resetBulkBazar = function() {
+window.resetBulkBazar = function () {
     pendingBazarItems = [];
     renderPendingBazarTable();
     document.getElementById('bazar-step-2').classList.add('d-none');
@@ -485,7 +485,7 @@ window.resetBulkBazar = function() {
 
 // Step 3: Save All to Database (প্রফেশনাল ওয়ে)
 document.getElementById('btn-save-bulk-bazar')?.addEventListener('click', async () => {
-    if(pendingBazarItems.length === 0) return;
+    if (pendingBazarItems.length === 0) return;
 
     const btn = document.getElementById('btn-save-bulk-bazar');
     const originalText = btn.innerHTML;
@@ -493,13 +493,13 @@ document.getElementById('btn-save-bulk-bazar')?.addEventListener('click', async 
     btn.disabled = true;
 
     try {
-        for(const entry of pendingBazarItems) {
+        for (const entry of pendingBazarItems) {
             await fetch(`${API_BASE_URL}/bazar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    date: currentBazarDate, 
-                    item: entry.item, 
+                body: JSON.stringify({
+                    date: currentBazarDate,
+                    item: entry.item,
                     amount: entry.amount,
                     note: "", // ম্যাজিক: Note এখন একদম ফাঁকা থাকবে!
                     shopper: currentShopperId // সরাসরি মেম্বারের ID পাঠানো হচ্ছে
@@ -509,9 +509,9 @@ document.getElementById('btn-save-bulk-bazar')?.addEventListener('click', async 
 
         const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
         Toast.fire({ icon: 'success', title: 'Full Bazar List Saved!' });
-        
-        resetBulkBazar(); 
-        await loadAllData(); 
+
+        resetBulkBazar();
+        await loadAllData();
 
     } catch (error) {
         console.error("Bulk Save Error:", error);
@@ -985,11 +985,11 @@ function deleteMember(id) {
 // ==========================================
 // --- EDIT OR ADD SHOPPER NAME FOR FULL DAY ---
 // ==========================================
-window.editShopperForDate = async function(dateStr, currentShopperId) {
+window.editShopperForDate = async function (dateStr, currentShopperId) {
     const activeMembers = state.members
         .filter(m => m.isActive)
         .sort((a, b) => String(a.room).localeCompare(String(b.room), undefined, { numeric: true }));
-    
+
     const inputOptions = {};
     activeMembers.forEach(m => {
         inputOptions[m._id] = `${m.name} (Room: ${m.room})`; // নাম নয়, ID সেভ হবে
@@ -1017,21 +1017,21 @@ window.editShopperForDate = async function(dateStr, currentShopperId) {
 
         try {
             const daysItems = state.bazar.filter(b => b.date.startsWith(dateStr));
-            
+
             for (const item of daysItems) {
                 await fetch(`${API_BASE_URL}/bazar/${item._id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        date: item.date, 
-                        item: item.item, 
-                        amount: item.amount, 
+                    body: JSON.stringify({
+                        date: item.date,
+                        item: item.item,
+                        amount: item.amount,
                         note: item.note, // আগের রিয়েল নোট থাকলে সেটা অক্ষত থাকবে
                         shopper: selectedShopperId // প্রফেশনাল মেম্বার ID বসবে
                     })
                 });
             }
-            
+
             await loadAllData();
             Swal.fire({ icon: 'success', title: 'Success!', text: 'বাজারকারীর নাম সফলভাবে আপডেট হয়েছে।', timer: 1500, showConfirmButton: false });
         } catch (error) {
@@ -1045,16 +1045,16 @@ window.editShopperForDate = async function(dateStr, currentShopperId) {
 // ==========================================
 // --- SHOW SHOPPER DATES POPUP ---
 // ==========================================
-window.showShopperDates = function(name, datesJsonStr) {
+window.showShopperDates = function (name, datesJsonStr) {
     const datesArray = JSON.parse(decodeURIComponent(datesJsonStr));
-    
+
     // তারিখগুলোকে সুন্দর করে লিস্ট আকারে সাজানো
     let listHTML = '<div class="list-group text-start mt-3 shadow-sm">';
     datesArray.forEach((dateStr, index) => {
         const dateObj = new Date(dateStr);
         const niceDate = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         const dayName = dateObj.toLocaleDateString('en-GB', { weekday: 'long' });
-        
+
         listHTML += `
             <div class="list-group-item d-flex justify-content-between align-items-center">
                 <span class="fw-bold text-dark"><span class="text-primary me-2">${index + 1}.</span>${niceDate}</span>
@@ -1110,7 +1110,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (res.ok) {
                     Swal.fire({ icon: 'success', title: 'Global Settings Saved!', text: 'হিসাবের নতুন নিয়ম সব ডিভাইসের জন্য কার্যকর হয়েছে।', timer: 2000, showConfirmButton: false });
-                    await loadAllData(); 
+                    await loadAllData();
                 } else {
                     Swal.fire('Error!', 'সেটিংস সেভ করতে সমস্যা হয়েছে।', 'error');
                 }
@@ -1126,7 +1126,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // Change Period বাটনে ক্লিক করলে Settings আসা-যাওয়ার (Toggle) বুলেটপ্রুফ লজিক
-window.toggleSettingsView = function() {
+window.toggleSettingsView = function () {
     const settingsSection = document.getElementById('settings');
     const dashboardSection = document.getElementById('dashboard');
 
@@ -1141,17 +1141,17 @@ window.toggleSettingsView = function() {
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('d-none'));
         // শুধু Settings টা ওপেন করো
         settingsSection.classList.remove('d-none');
-        
+
         // (ঐচ্ছিক) মেনুবারে Settings এর রঙ অ্যাক্টিভ করা
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         const settingsBtn = document.querySelector('.nav-btn[data-target="settings"]');
         if (settingsBtn) settingsBtn.classList.add('active');
-        
+
     } else {
         // যদি Settings আগে থেকেই ওপেন থাকে, তাহলে সব হাইড করে ড্যাশবোর্ডে ফিরে যাও
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('d-none'));
         dashboardSection.classList.remove('d-none');
-        
+
         // (ঐচ্ছিক) মেনুবারে Dashboard এর রঙ অ্যাক্টিভ করা
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         const dashboardBtn = document.querySelector('.nav-btn[data-target="dashboard"]');
@@ -1163,14 +1163,14 @@ window.toggleSettingsView = function() {
 // ==========================================
 // --- WHATSAPP AUTO NOTIFICATION ---
 // ==========================================
-window.sendWhatsAppMsg = function(phone, name, balance) {
+window.sendWhatsAppMsg = function (phone, name, balance) {
     let formattedPhone = phone.trim();
     if (formattedPhone.startsWith('0')) {
         formattedPhone = '88' + formattedPhone;
     } else if (!formattedPhone.startsWith('88')) {
-        formattedPhone = '880' + formattedPhone; 
+        formattedPhone = '880' + formattedPhone;
     }
-    
+
     let message = '';
     const exactAmount = Math.abs(balance).toFixed(2);
 
@@ -1182,7 +1182,7 @@ window.sendWhatsAppMsg = function(phone, name, balance) {
         // ব্যালেন্স প্লাস কিন্তু কম (Low Balance) থাকলে এই মেসেজ যাবে
         message = `আসসালামু আলাইকুম ${name},\nমেস অ্যাকাউন্টে আপনার ব্যালেন্স খুবই কম (মাত্র ৳${exactAmount} বাকি আছে)। মিল চালু রাখতে দয়া করে দ্রুত টাকা জমা দিন।\n- মেস ম্যানেজার`;
     }
-    
+
     // হোয়াটসঅ্যাপ ওপেন করা
     const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(waUrl, '_blank');
@@ -1192,10 +1192,10 @@ window.sendWhatsAppMsg = function(phone, name, balance) {
 // ==========================================
 // --- MEMBER HISTORY (PASSBOOK) LOGIC ---
 // ==========================================
-window.showMemberHistory = function(memberId) {
+window.showMemberHistory = function (memberId) {
     const memberIdStr = memberId.toString();
     const memberInfo = state.report?.members?.find(m => m.memberId.toString() === memberIdStr);
-    
+
     if (!memberInfo) {
         Swal.fire('Oops!', 'ডেটা লোড হয়নি। দয়া করে একটু পর আবার চেষ্টা করুন।', 'warning');
         return;
@@ -1232,7 +1232,7 @@ window.showMemberHistory = function(memberId) {
         dinner: Number(s.rateDinner) || 0, sehri: Number(s.rateSehri) || 0, iftar: Number(s.rateIftar) || 0
     };
 
-    const memberMeals = state.meals.filter(m => 
+    const memberMeals = state.meals.filter(m =>
         m.members.some(mem => (mem._id || mem).toString() === memberIdStr)
     );
 
@@ -1246,7 +1246,7 @@ window.showMemberHistory = function(memberId) {
                 cost = avgRate;
             }
         }
-        
+
         transactions.push({
             date: new Date(m.date),
             details: `<span class="badge bg-primary bg-opacity-10 text-primary text-capitalize border border-primary border-opacity-25">${m.mealType} Meal</span>`,
@@ -1288,7 +1288,7 @@ window.showMemberHistory = function(memberId) {
 // ==========================================
 // --- DESIGNED EXCEL EXPORT LOGIC ---
 // ==========================================
-window.exportReportToExcel = function() {
+window.exportReportToExcel = function () {
     if (!state.report || !state.report.members || state.report.members.length === 0) {
         Swal.fire('Oops!', 'এক্সেল ডাউনলোড করার জন্য কোনো ডেটা নেই!', 'warning');
         return;
@@ -1359,13 +1359,13 @@ window.exportReportToExcel = function() {
     const blob = new Blob(['\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
+
     const niceDate = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
-    
+
     link.setAttribute("href", url);
     link.setAttribute("download", `Mess_Report_${niceDate}.xls`);
     link.style.visibility = 'hidden';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1374,7 +1374,7 @@ window.exportReportToExcel = function() {
 // ==========================================
 // --- CLOSE TERM & HANDOVER (SAAS LOGIC) ---
 // ==========================================
-window.triggerHandover = async function() {
+window.triggerHandover = async function () {
     if (!state.report || !state.report.members || state.report.members.length === 0) {
         Swal.fire('Oops!', 'হিসাব ক্লোজ করার মতো কোনো ডেটা নেই!', 'warning');
         return;
@@ -1384,7 +1384,7 @@ window.triggerHandover = async function() {
     const activeMembers = state.members
         .filter(m => m.isActive)
         .sort((a, b) => String(a.room).localeCompare(String(b.room), undefined, { numeric: true }));
-        
+
     let optionsHTML = '<option value="" disabled selected>-- নতুন ম্যানেজার সিলেক্ট করুন --</option>';
     activeMembers.forEach(m => {
         optionsHTML += `<option value="${m._id}">${m.name} (Room: ${m.room})</option>`;
@@ -1420,11 +1420,11 @@ window.triggerHandover = async function() {
         const newManagerId = formValues;
 
         // লোডিং অ্যানিমেশন চালু
-        Swal.fire({ 
-            title: 'Processing Handover...', 
-            html: 'সবার ব্যালেন্স ট্রান্সফার করা হচ্ছে, দয়া করে অপেক্ষা করুন।<br><br><span class="spinner-border text-primary"></span>', 
-            allowOutsideClick: false, 
-            showConfirmButton: false 
+        Swal.fire({
+            title: 'Processing Handover...',
+            html: 'সবার ব্যালেন্স ট্রান্সফার করা হচ্ছে, দয়া করে অপেক্ষা করুন।<br><br><span class="spinner-border text-primary"></span>',
+            allowOutsideClick: false,
+            showConfirmButton: false
         });
 
         try {
@@ -1443,10 +1443,10 @@ window.triggerHandover = async function() {
                         fetch(`${API_BASE_URL}/deposits`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                date: nextDayStr, 
-                                member: member.memberId || member._id, 
-                                amount: balance 
+                            body: JSON.stringify({
+                                date: nextDayStr,
+                                member: member.memberId || member._id,
+                                amount: balance
                             })
                         })
                     );
@@ -1459,7 +1459,7 @@ window.triggerHandover = async function() {
             // ৫. নতুন ম্যানেজার ডাটাবেসে সেট করা
             const newYear = endDateObj.getFullYear();
             const newMonth = endDateObj.getMonth() + 1;
-            
+
             await fetch(`${API_BASE_URL}/manager`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1469,7 +1469,7 @@ window.triggerHandover = async function() {
             // ৬. গ্লোবাল সেটিংস (Report Period) আপডেট করে নতুন মেয়াদে নিয়ে যাওয়া
             const endOfNewMonthObj = new Date(newYear, newMonth, 0); // ওই মাসের শেষ দিন
             const endOfNewMonthStr = endOfNewMonthObj.toISOString().split('T')[0];
-            
+
             await fetch(`${API_BASE_URL}/settings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1482,15 +1482,15 @@ window.triggerHandover = async function() {
             // লোকাল ভেরিয়েবল এবং ইনপুট ফিল্ড আপডেট
             globalStartDate = nextDayStr;
             globalEndDate = endOfNewMonthStr;
-            
+
             const startInput = document.getElementById('global-start-date');
             const endInput = document.getElementById('global-end-date');
-            if(startInput) startInput.value = globalStartDate;
-            if(endInput) endInput.value = globalEndDate;
+            if (startInput) startInput.value = globalStartDate;
+            if (endInput) endInput.value = globalEndDate;
 
             // ডেটা রিলোড করা
             await loadAllData();
-            
+
             // ৭. সাকসেস মেসেজ এবং ড্যাশবোর্ডে রিডাইরেক্ট
             Swal.fire({
                 icon: 'success',
@@ -1499,7 +1499,7 @@ window.triggerHandover = async function() {
                 confirmButtonColor: '#198754'
             }).then(() => {
                 const dashboardBtn = document.querySelector('.nav-btn[data-target="dashboard"]');
-                if(dashboardBtn) dashboardBtn.click();
+                if (dashboardBtn) dashboardBtn.click();
             });
 
         } catch (error) {
@@ -1512,9 +1512,9 @@ window.triggerHandover = async function() {
 // ==========================================
 // --- GLOBAL DISPLAY SETTINGS (DATABASE CONTROL) ---
 // ==========================================
-window.saveDisplaySettings = async function() {
+window.saveDisplaySettings = async function () {
     const isChecked = document.getElementById('toggle-bazar-report').checked;
-    
+
     try {
         // 🪄 ম্যাজিক: কোনো টোকেন বা হেডার ম্যানুয়ালি দিতে হলো না! Interceptor নিজে বসিয়ে নেবে।
         const response = await fetch(`${API_BASE_URL}/settings`, {
@@ -1525,9 +1525,9 @@ window.saveDisplaySettings = async function() {
         if (response.ok) {
             if (!state.settings) state.settings = {};
             state.settings.showBazarReport = isChecked;
-            
-            if(typeof renderBazarTable === 'function') renderBazarTable();
-            
+
+            if (typeof renderBazarTable === 'function') renderBazarTable();
+
             const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
             Toast.fire({ icon: 'success', title: isChecked ? 'Global Report Enabled!' : 'Global Report Hidden!' });
         } else {
@@ -1540,7 +1540,7 @@ window.saveDisplaySettings = async function() {
 };
 
 // ১. ডাটাবেস থেকে বর্তমান লিংকটি বক্সে লোড করা
-window.loadPublicLink = async function() {
+window.loadPublicLink = async function () {
     try {
         const token = localStorage.getItem('managerToken'); // টোকেন নেওয়া হলো
         const res = await fetch(`${API_BASE_URL}/public/get-token`, {
@@ -1548,28 +1548,28 @@ window.loadPublicLink = async function() {
             headers: { 'Authorization': `Bearer ${token}` } // 🛡️ ম্যাজিক: জোর করে টোকেন পাঠানো হলো!
         });
         const data = await res.json();
-        
-        if(data.success && data.shareToken) {
+
+        if (data.success && data.shareToken) {
             let basePath = window.location.href.split('?')[0].replace('index.html', '');
             if (!basePath.endsWith('/')) basePath += '/';
-            
+
             // ইনপুট বক্সে লিংকটি বসিয়ে দেওয়া হচ্ছে
             document.getElementById('public-link-input').value = `${basePath}public-view.html?token=${data.shareToken}`;
         }
-    } catch(err) { console.error(err); }
+    } catch (err) { console.error(err); }
 };
 
 // ২. ইনপুট বক্স থেকে লিংক কপি করা
-window.copyPublicLink = function() {
+window.copyPublicLink = function () {
     const linkInput = document.getElementById('public-link-input');
-    if(linkInput.value && !linkInput.value.includes('Loading')) {
+    if (linkInput.value && !linkInput.value.includes('Loading')) {
         navigator.clipboard.writeText(linkInput.value);
         Swal.fire('Copied!', 'পাবলিক লিংক কপি হয়েছে। মেম্বারদের পাঠিয়ে দিন!', 'success');
     }
 };
 
 // ৩. আগের লিংক বাতিল করে নতুন লিংক তৈরি করা
-window.resetPublicLink = function() {
+window.resetPublicLink = function () {
     Swal.fire({
         title: 'Reset Link?',
         text: "আগের লিংকটি বাতিল হয়ে যাবে এবং নতুন লিংক তৈরি হবে।",
@@ -1582,17 +1582,17 @@ window.resetPublicLink = function() {
         if (result.isConfirmed) {
             try {
                 const token = localStorage.getItem('managerToken');
-                const res = await fetch(`${API_BASE_URL}/public/reset-token`, { 
+                const res = await fetch(`${API_BASE_URL}/public/reset-token`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
-                
-                if(data.success) {
+
+                if (data.success) {
                     await window.loadPublicLink(); // বক্সে নতুন লিংক আপডেট করা
                     Swal.fire('Reset Done!', 'আগের লিংক বাতিল করে নতুন লিংক জেনারেট হয়েছে!', 'success');
                 }
-            } catch(err) { console.error(err); }
+            } catch (err) { console.error(err); }
         }
     });
 };
@@ -1602,25 +1602,25 @@ window.resetPublicLink = function() {
 // ==========================================
 
 // ১. ডাটাবেস থেকে প্রোফাইল ও বিলিং ডেটা এনে বক্সে বসানো
-window.loadProfileData = async function() {
+window.loadProfileData = async function () {
     try {
-        const token = localStorage.getItem('managerToken') || localStorage.getItem('messToken'); 
+        const token = localStorage.getItem('managerToken') || localStorage.getItem('messToken');
         const res = await fetch(`${API_BASE_URL}/auth/profile`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const json = await res.json();
-        
+
         if (json.success && json.data) {
             document.getElementById('profile-name').value = json.data.messName || '';
             document.getElementById('profile-email').value = json.data.messEmail || '';
 
             const subStatus = json.data.subscriptionStatus || 'trial';
             const trialEndsAt = json.data.trialEndsAt;
-            
+
             localStorage.setItem('subscriptionStatus', subStatus);
-            if(trialEndsAt) localStorage.setItem('trialEndsAt', trialEndsAt);
-            
+            if (trialEndsAt) localStorage.setItem('trialEndsAt', trialEndsAt);
+
             const planNameEl = document.getElementById('profile-plan-name');
             const planStatusEl = document.getElementById('profile-plan-status');
             const planExpiryEl = document.getElementById('profile-plan-expiry');
@@ -1638,36 +1638,36 @@ window.loadProfileData = async function() {
                     }
                 }
                 if (upgradeBtn) upgradeBtn.style.display = 'none';
-            } 
+            }
             // 🚀 ম্যাজিক ২: Premium Mode
             else if (subStatus === 'active' && trialEndsAt) {
-                if(planNameEl) {
+                if (planNameEl) {
                     planNameEl.innerText = 'Premium Pro';
                     planNameEl.className = 'fw-bolder text-success fs-5';
                 }
-                if(planStatusEl) {
+                if (planStatusEl) {
                     planStatusEl.innerText = 'Active';
                     planStatusEl.className = 'badge bg-success text-white px-2 py-1 shadow-sm';
                 }
-                if(planExpiryEl) {
+                if (planExpiryEl) {
                     const expiryDate = new Date(trialEndsAt);
                     planExpiryEl.innerText = expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
                 }
-                if(upgradeBtn) upgradeBtn.style.display = 'none'; 
-            } 
+                if (upgradeBtn) upgradeBtn.style.display = 'none';
+            }
             // 🚀 ম্যাজিক ৩: Free Trial Mode
             else {
-                if(planNameEl) {
+                if (planNameEl) {
                     planNameEl.innerText = 'Free Trial';
                     planNameEl.className = 'fw-bold text-dark fs-5';
                 }
-                if(upgradeBtn) upgradeBtn.style.display = 'block'; 
-                
+                if (upgradeBtn) upgradeBtn.style.display = 'block';
+
                 if (trialEndsAt && planExpiryEl && planStatusEl) {
                     const trialDate = new Date(trialEndsAt);
                     const today = new Date();
                     planExpiryEl.innerText = trialDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                    
+
                     const diffDays = Math.ceil((trialDate - today) / (1000 * 60 * 60 * 24));
                     if (diffDays > 0) {
                         planStatusEl.innerText = `${diffDays} Days Left`;
@@ -1704,25 +1704,25 @@ document.getElementById('form-update-profile')?.addEventListener('submit', async
 
     try {
         const token = localStorage.getItem('managerToken') || localStorage.getItem('messToken');
-        
+
         const res = await fetch(`${API_BASE_URL}/auth/profile`, {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` // 🛡️ আপডেট করার সময়ও টোকেন পাঠানো হলো
             },
             body: JSON.stringify({ messName, messEmail, oldPin, newPin })
         });
-        
+
         const data = await res.json();
 
         if (res.ok) {
             Swal.fire('Success!', 'প্রোফাইল সফলভাবে আপডেট হয়েছে!', 'success');
-            
+
             // পিন বা ইমেইল পরিবর্তন হলে নিরাপত্তার জন্য আবার লগিন করতে বলা
             if (oldPin || newPin || messEmail) {
                 setTimeout(() => {
-                    if(typeof handleLogout === 'function') handleLogout(); 
+                    if (typeof handleLogout === 'function') handleLogout();
                     else {
                         localStorage.clear();
                         window.location.reload();
@@ -1751,17 +1751,17 @@ window.isAppLocked = false; // গ্লোবাল লক ভেরিয়ে�
 function checkSubscriptionStatus() {
     const subStatus = localStorage.getItem('subscriptionStatus');
     const trialEndsAt = localStorage.getItem('trialEndsAt');
-    
+
     // যদি ইউজারের ট্রায়াল ডেট না থাকে (পুরনো অ্যাকাউন্ট), তবে তাকে ডিস্টার্ব করবো না
-    if (!trialEndsAt) return; 
+    if (!trialEndsAt) return;
 
     const trialDate = new Date(trialEndsAt);
     const today = new Date();
-    
+
     // কত দিন বাকি আছে ক্যালকুলেট করা
     const diffTime = trialDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     const bannerContainer = document.getElementById('subscription-banner-container');
     if (!bannerContainer) return;
 
@@ -1775,7 +1775,7 @@ function checkSubscriptionStatus() {
     if (diffDays > 0) {
         // ট্রায়াল চলছে...
         window.isAppLocked = false;
-        
+
         // শর্ত: শুধুমাত্র শেষ ৩ দিন বাকি থাকলে ব্যানার দেখাবে
         if (diffDays <= 3) {
             bannerContainer.innerHTML = `
@@ -1798,7 +1798,7 @@ function checkSubscriptionStatus() {
                 <button class="btn btn-danger btn-sm rounded-pill px-4 shadow-sm" onclick="showUpgradeModal()">Unlock App</button>
             </div>
         `;
-        
+
         lockAppUI();
     }
 }
@@ -1806,7 +1806,7 @@ function checkSubscriptionStatus() {
 function lockAppUI() {
     // ১. জোর করে ইউজারকে Dashboard এ নিয়ে আসা (অন্য পেজে থাকলে)
     const dashboardBtn = document.querySelector('[data-target="dashboard"]');
-    if(dashboardBtn && !dashboardBtn.classList.contains('active')) {
+    if (dashboardBtn && !dashboardBtn.classList.contains('active')) {
         dashboardBtn.click();
     }
 
@@ -1815,7 +1815,7 @@ function lockAppUI() {
     navItems.forEach(nav => {
         const target = nav.getAttribute('data-target');
         if (target !== 'dashboard' && target !== 'profile') {
-            nav.parentElement.style.display = 'none'; 
+            nav.parentElement.style.display = 'none';
         }
     });
 
@@ -1828,8 +1828,8 @@ function lockAppUI() {
 }
 
 // 🚀 প্যাকেজ সিলেক্ট, ডায়নামিক প্রাইস এবং প্রফেশনাল পেমেন্ট মোডাল
-window.showUpgradeModal = async function() {
-    
+window.showUpgradeModal = async function () {
+
     // ১. প্রথমে ডাটাবেস থেকে লাইভ প্রাইস নিয়ে আসার জন্য একটি ছোট লোডিং দেখানো হবে
     Swal.fire({
         title: 'Please wait...',
@@ -1915,11 +1915,11 @@ window.showUpgradeModal = async function() {
         didOpen: () => {
             window.selectedPrice = monthPrice; // 🚀 ডাটাবেস থেকে আসা কারেন্ট প্রাইস
             window.appliedPromo = '';
-            
-            window.selectPackage = function(price, cardId) {
+
+            window.selectPackage = function (price, cardId) {
                 window.selectedPrice = price;
                 window.appliedPromo = '';
-                
+
                 // Reset card styles
                 document.getElementById('card-month').style.borderColor = '#e2e8f0';
                 document.getElementById('card-month').style.backgroundColor = '#ffffff';
@@ -1928,17 +1928,17 @@ window.showUpgradeModal = async function() {
                 document.getElementById('card-year').style.borderColor = '#e2e8f0';
                 document.getElementById('card-year').style.backgroundColor = '#ffffff';
                 document.querySelector('#card-year .fs-5').classList.replace('text-primary', 'text-muted');
-                
+
                 // Highlight selected card
                 document.getElementById(cardId).style.borderColor = '#6366f1';
                 document.getElementById(cardId).style.backgroundColor = '#f8fafc';
                 document.querySelector(`#${cardId} .fs-5`).classList.replace('text-muted', 'text-primary');
-                
+
                 // Reset Summary Box
                 document.getElementById('summary-subtotal').innerText = `৳${price}`;
                 document.getElementById('summary-discount-row').style.setProperty('display', 'none', 'important');
                 document.getElementById('summary-total').innerText = `৳${price}`;
-                
+
                 // Reset Promo Box
                 document.getElementById('promo-code').value = '';
                 document.getElementById('promo-message').style.display = 'none';
@@ -1949,13 +1949,13 @@ window.showUpgradeModal = async function() {
                 btn.disabled = false;
             };
 
-            window.applyPromo = async function() {
+            window.applyPromo = async function () {
                 const code = document.getElementById('promo-code').value.trim();
                 const msgEl = document.getElementById('promo-message');
                 const btn = document.getElementById('apply-btn');
-                
-                if(!code) return;
-                
+
+                if (!code) return;
+
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
                 btn.disabled = true;
 
@@ -1967,13 +1967,13 @@ window.showUpgradeModal = async function() {
                         body: JSON.stringify({ promoCode: code, packagePrice: window.selectedPrice })
                     });
                     const data = await res.json();
-                    
-                    if(data.success) {
+
+                    if (data.success) {
                         window.appliedPromo = code;
-                        
+
                         btn.innerHTML = '<i class="bi bi-check2"></i>';
                         btn.classList.replace('btn-dark', 'btn-success');
-                        
+
                         msgEl.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${data.message}`;
                         msgEl.className = 'small mt-2 text-success';
                         msgEl.style.display = 'block';
@@ -1985,16 +1985,16 @@ window.showUpgradeModal = async function() {
                     } else {
                         btn.innerHTML = 'Apply';
                         btn.disabled = false;
-                        
+
                         msgEl.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> ${data.message}`;
                         msgEl.className = 'small mt-2 text-danger';
                         msgEl.style.display = 'block';
-                        
+
                         document.getElementById('summary-discount-row').style.setProperty('display', 'none', 'important');
                         document.getElementById('summary-total').innerText = `৳${window.selectedPrice}`;
                         window.appliedPromo = '';
                     }
-                } catch(err) {
+                } catch (err) {
                     btn.innerHTML = 'Apply';
                     btn.disabled = false;
                 }
@@ -2012,11 +2012,11 @@ window.showUpgradeModal = async function() {
                 const res = await fetch(`${API_BASE_URL}/payment/create`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ packagePrice: window.selectedPrice, promoCode: window.appliedPromo }) 
+                    body: JSON.stringify({ packagePrice: window.selectedPrice, promoCode: window.appliedPromo })
                 });
-                
+
                 const data = await res.json();
-                if (res.ok && data.success && data.bkashURL) return data.bkashURL; 
+                if (res.ok && data.success && data.bkashURL) return data.bkashURL;
                 else {
                     confirmBtn.innerHTML = 'Proceed to Pay';
                     confirmBtn.disabled = false;
@@ -2038,7 +2038,7 @@ window.showUpgradeModal = async function() {
 
 // পেজ লোড হওয়ার পর সাবস্ক্রিপশন চেক কল করা
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(checkSubscriptionStatus, 500); 
+    setTimeout(checkSubscriptionStatus, 500);
 });
 
 // ==========================================
@@ -2049,11 +2049,11 @@ async function loadGlobalNotice() {
         // আমাদের বানানো প্রাইসিং API থেকেই নোটিশটি আনা হচ্ছে (কারণ এটি সবার জন্য উন্মুক্ত)
         const res = await fetch(`${API_BASE_URL}/admin/pricing`);
         const data = await res.json();
-        
+
         if (data.success && data.data && data.data.globalNotice) {
             const noticeText = data.data.globalNotice.trim();
             const noticeContainer = document.getElementById('global-notice-container');
-            
+
             // নোটিশের বক্সে কোনো লেখা থাকলে তবেই অ্যালার্ট শো করবে
             if (noticeText !== '' && noticeContainer) {
                 noticeContainer.innerHTML = `
@@ -2072,5 +2072,30 @@ async function loadGlobalNotice() {
 
 // 🚀 পেজ লোড হওয়ার সময় নোটিশ ফাংশনটি কল করে দিন
 document.addEventListener('DOMContentLoaded', () => {
-    loadGlobalNotice(); 
+    loadGlobalNotice();
 });
+
+// ==========================================
+// --- SECURE LOGOUT LOGIC ---
+// ==========================================
+window.handleLogout = function () {
+    Swal.fire({
+        title: 'লগআউট করতে চান?',
+        text: "আপনাকে মেস ম্যানেজার থেকে লগআউট করা হবে।",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-box-arrow-right me-1"></i> হ্যাঁ, লগআউট করুন',
+        cancelButtonText: 'ক্যানসেল',
+        customClass: {
+            popup: 'rounded-4'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // ব্রাউজার থেকে সব ডেটা ক্লিয়ার করে লগিন পেজে পাঠানো
+            localStorage.clear();
+            window.location.replace('login.html');
+        }
+    });
+};

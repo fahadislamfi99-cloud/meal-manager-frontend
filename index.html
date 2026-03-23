@@ -66,14 +66,8 @@
                     <span class="font-bold text-xl tracking-tight">MessManager.</span>
                 </div>
                 
-                <div class="flex items-center gap-4">
-                    <a href="login.html" class="hidden sm:block text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                        Log in
-                    </a>
-                    <a href="login.html" class="inline-flex justify-center items-center px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-md shadow-sm hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2">
-                        Get Started
-                        <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
-                    </a>
+                <div id="nav-auth-container" class="flex items-center gap-4">
+                     <span class="animate-pulse w-24 h-8 bg-slate-200 rounded-md"></span>
                 </div>
             </div>
         </div>
@@ -96,14 +90,8 @@
                 খাতা-কলমের বিরক্তিকর হিসাব বাদ দিন। মিল, বাজার আর বকেয়ার হিসাব রাখুন ১০০% নির্ভুলভাবে, একদম ফ্রিতে।
             </p>
 
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-16">
-                <a href="login.html" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 text-base font-medium text-white bg-primary rounded-md shadow-lg hover:bg-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 hover:-translate-y-0.5">
-                    Create Free Account
-                </a>
-                <a href="#features" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 text-base font-medium text-slate-700 bg-white border border-slate-200 rounded-md shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-all">
-                    <i data-lucide="play-circle" class="w-5 h-5 me-2 text-slate-400"></i> See how it works
-                </a>
-            </div>
+            <div id="hero-cta-container" class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-16">
+                 </div>
 
             <div class="relative max-w-5xl mx-auto mt-10 float-anim">
                 <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur opacity-20"></div>
@@ -175,6 +163,49 @@
         </div>
     </section>
 
+    <!-- Pricing -->
+     <section id="pricing" class="py-24 bg-white border-t border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4">সবার জন্য সাশ্রয়ী মূল্য</h2>
+                <p class="text-lg text-slate-600">কোনো ফিচার লক করা নেই। ১ মাস বা ১ বছর—যেকোনো প্ল্যানেই অ্যাপের ১০০% ফিচার উপভোগ করুন।</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                
+                <div class="p-8 bg-white border border-slate-200 rounded-3xl hover:border-blue-500 hover:shadow-xl transition-all duration-300 relative flex flex-col">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2">মান্থলি প্ল্যান</h3>
+                    <p class="text-slate-500 mb-6">ছোট মেস বা টেস্টিংয়ের জন্য</p>
+                    <div class="mb-6">
+                        <span class="text-5xl font-extrabold text-slate-900">৳<span id="price-monthly">৯৯</span></span>
+                        <span class="text-slate-500 font-medium">/মাস</span>
+                    </div>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-center text-slate-700"><i data-lucide="check-circle-2" class="w-5 h-5 text-blue-500 me-3"></i> আনলিমিটেড মেম্বার ও ডাটা</li>
+                        <li class="flex items-center text-slate-700"><i data-lucide="check-circle-2" class="w-5 h-5 text-blue-500 me-3"></i> পিডিএফ এবং এক্সেল এক্সপোর্ট</li>
+                        <li class="flex items-center text-slate-700"><i data-lucide="check-circle-2" class="w-5 h-5 text-blue-500 me-3"></i> সকল প্রিমিয়াম ফিচারের অ্যাক্সেস</li>
+                    </ul>
+                </div>
+
+                <div class="p-8 bg-slate-900 rounded-3xl shadow-2xl relative flex flex-col transform md:-translate-y-4 border border-slate-800">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-lg whitespace-nowrap">সবচেয়ে জনপ্রিয় (২ মাস ফ্রি)</div>
+                    <h3 class="text-2xl font-bold text-white mb-2 mt-2">ইয়ারলি প্ল্যান</h3>
+                    <p class="text-slate-400 mb-6">দীর্ঘমেয়াদী সাশ্রয়ের জন্য সেরা অপশন</p>
+                    <div class="mb-6">
+                        <span class="text-5xl font-extrabold text-white">৳<span id="price-yearly">৯৯৯</span></span>
+                        <span class="text-slate-400 font-medium">/বছর</span>
+                    </div>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-center text-slate-300"><i data-lucide="check-circle-2" class="w-5 h-5 text-blue-400 me-3"></i> আনলিমিটেড মেম্বার ও ডাটা</li>
+                        <li class="flex items-center text-slate-300"><i data-lucide="check-circle-2" class="w-5 h-5 text-blue-400 me-3"></i> পিডিএফ এবং এক্সেল এক্সপোর্ট</li>
+                        <li class="flex items-center text-slate-300"><i data-lucide="check-circle-2" class="w-5 h-5 text-blue-400 me-3"></i> সকল প্রিমিয়াম ফিচারের অ্যাক্সেস</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <!-- Pricing -->
+
     <section class="py-24 bg-slate-50 border-t border-slate-200">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-6">রেডি মেসকে স্মার্ট করতে?</h2>
@@ -210,6 +241,69 @@
     <script>
         lucide.createIcons();
         document.getElementById('current-year').innerText = new Date().getFullYear();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            document.getElementById('current-year').innerText = new Date().getFullYear();
+
+            const token = localStorage.getItem('messToken') || localStorage.getItem('managerToken');
+            const navContainer = document.getElementById('nav-auth-container');
+            const heroContainer = document.getElementById('hero-cta-container');
+
+            // --- 1. Dynamic Buttons Logic ---
+            if (token) {
+                // Logged In State
+                if(navContainer) navContainer.innerHTML = `
+                    <a href="app.html" class="inline-flex justify-center items-center px-5 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4 me-2"></i> ড্যাশবোর্ডে যান
+                    </a>
+                `;
+                if(heroContainer) heroContainer.innerHTML = `
+                    <a href="app.html" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 text-base font-bold text-white bg-blue-600 rounded-md shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all hover:-translate-y-1">
+                        ড্যাশবোর্ডে প্রবেশ করুন <i data-lucide="arrow-right" class="w-5 h-5 ms-2"></i>
+                    </a>
+                `;
+            } else {
+                // Logged Out State
+                if(navContainer) navContainer.innerHTML = `
+                    <a href="login.html" class="text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors px-2 sm:px-3">লগিন</a>
+                    <a href="login.html?tab=register" class="inline-flex justify-center items-center px-3 py-2 sm:px-5 sm:py-2.5 text-sm font-medium text-white bg-primary rounded-md shadow-sm hover:bg-slate-800 transition-all">
+                        ফ্রি শুরু করুন
+                    </a>
+                `;
+                if(heroContainer) heroContainer.innerHTML = `
+                    <a href="login.html?tab=register" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 text-base font-medium text-white bg-primary rounded-md shadow-lg hover:bg-slate-800 transition-all hover:-translate-y-0.5">
+                        ফ্রি ট্রায়াল শুরু করুন
+                    </a>
+                    <a href="#features" class="w-full sm:w-auto inline-flex justify-center items-center px-8 py-3.5 text-base font-medium text-slate-700 bg-white border border-slate-200 rounded-md shadow-sm hover:bg-slate-50 transition-all">
+                        <i data-lucide="play-circle" class="w-5 h-5 me-2 text-slate-400"></i> বিস্তারিত জানুন
+                    </a>
+                `;
+            }
+            lucide.createIcons(); // Re-render icons for new buttons
+
+            // --- 2. Live Pricing Logic ---
+            try {
+                const API_BASE_URL = 'https://meal-manager-backend-kp8y.onrender.com/api'; 
+                const res = await fetch(`${API_BASE_URL}/admin/pricing`);
+                const data = await res.json();
+                
+                if (data.success && data.data) {
+                    const toBangla = (num) => {
+                        const banglaDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+                        return num.toString().replace(/[0-9]/g, x => banglaDigits[x]);
+                    };
+                    
+                    const monthEl = document.getElementById('price-monthly');
+                    const yearEl = document.getElementById('price-yearly');
+                    
+                    if(monthEl) monthEl.innerText = toBangla(data.data.monthlyPrice);
+                    if(yearEl) yearEl.innerText = toBangla(data.data.yearlyPrice);
+                }
+            } catch (error) {
+                console.error("Pricing load failed, using default prices.");
+            }
+        });
     </script>
 </body>
 </html>

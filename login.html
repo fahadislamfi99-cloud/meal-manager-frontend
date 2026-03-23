@@ -212,32 +212,41 @@
         <div class="col-lg-6 col-12 form-side">
 
             <div class="form-container" id="login-section">
+                <a href="index.html"
+                    class="text-decoration-none text-muted small mb-4 d-inline-block fw-bold auth-link">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Home
+                </a>
+
                 <h2 class="fw-bold text-dark mb-2">Sign In</h2>
                 <p class="text-muted mb-4 small">Enter your credentials to continue</p>
 
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <div class="input-group-custom">
-                        <i class="bi bi-envelope left-icon"></i>
-                        <input type="email" id="login-email" class="form-control" placeholder="you@example.com">
+                <form onsubmit="executeLogin(event)">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-envelope left-icon"></i>
+                            <input type="email" id="login-email" class="form-control" placeholder="you@example.com"
+                                required>
+                        </div>
                     </div>
-                </div>
 
-                <div class="mb-2">
-                    <label class="form-label">PIN</label>
-                    <div class="input-group-custom">
-                        <i class="bi bi-lock left-icon"></i>
-                        <input type="password" id="login-pin" class="form-control has-right-icon" placeholder="****">
-                        <i class="bi bi-eye-slash right-icon" onclick="toggleVisibility('login-pin', this)"></i>
+                    <div class="mb-2">
+                        <label class="form-label">PIN</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-lock left-icon"></i>
+                            <input type="password" id="login-pin" class="form-control has-right-icon" placeholder="****"
+                                required>
+                            <i class="bi bi-eye-slash right-icon" onclick="toggleVisibility('login-pin', this)"></i>
+                        </div>
                     </div>
-                </div>
 
-                <div class="text-end mb-4">
-                    <a href="#" class="text-decoration-none small fw-bold" style="color: #6366f1;"
-                        onclick="openForgotPinModal()">Forgot PIN?</a>
-                </div>
+                    <div class="text-end mb-4">
+                        <a href="#" class="text-decoration-none small fw-bold" style="color: #6366f1;"
+                            onclick="openForgotPinModal()">Forgot PIN?</a>
+                    </div>
 
-                <button onclick="executeLogin()" class="btn-brand">Sign In</button>
+                    <button type="submit" class="btn-brand">Sign In</button>
+                </form>
 
                 <p class="text-center mt-4 small text-muted">
                     Don't have an account? <a href="#" class="auth-link" onclick="switchForm('register')">Sign Up</a>
@@ -245,35 +254,45 @@
             </div>
 
             <div class="form-container d-none" id="register-section">
+                <a href="index.html"
+                    class="text-decoration-none text-muted small mb-4 d-inline-block fw-bold auth-link">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Home
+                </a>
+
                 <h2 class="fw-bold text-dark mb-2">Create Account</h2>
                 <p class="text-muted mb-4 small">Start managing your mess today</p>
 
-                <div class="mb-3">
-                    <label class="form-label">Mess Name</label>
-                    <div class="input-group-custom">
-                        <i class="bi bi-house-door left-icon"></i>
-                        <input type="text" id="reg-name" class="form-control" placeholder="e.g. VIP Bachelor Mess">
+                <form onsubmit="executeRegister(event)">
+                    <div class="mb-3">
+                        <label class="form-label">Mess Name</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-house-door left-icon"></i>
+                            <input type="text" id="reg-name" class="form-control" placeholder="e.g. VIP Bachelor Mess"
+                                required>
+                        </div>
                     </div>
-                </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <div class="input-group-custom">
-                        <i class="bi bi-envelope left-icon"></i>
-                        <input type="email" id="reg-email" class="form-control" placeholder="you@example.com">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-envelope left-icon"></i>
+                            <input type="email" id="reg-email" class="form-control" placeholder="you@example.com"
+                                required>
+                        </div>
                     </div>
-                </div>
 
-                <div class="mb-4">
-                    <label class="form-label">Create PIN</label>
-                    <div class="input-group-custom">
-                        <i class="bi bi-shield-lock left-icon"></i>
-                        <input type="password" id="reg-pin" class="form-control has-right-icon" placeholder="****">
-                        <i class="bi bi-eye-slash right-icon" onclick="toggleVisibility('reg-pin', this)"></i>
+                    <div class="mb-4">
+                        <label class="form-label">Create PIN</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-shield-lock left-icon"></i>
+                            <input type="password" id="reg-pin" class="form-control has-right-icon" placeholder="****"
+                                required>
+                            <i class="bi bi-eye-slash right-icon" onclick="toggleVisibility('reg-pin', this)"></i>
+                        </div>
                     </div>
-                </div>
 
-                <button onclick="executeRegister()" class="btn-brand">Create Account</button>
+                    <button type="submit" class="btn-brand">Create Account</button>
+                </form>
 
                 <p class="text-center mt-4 small text-muted">
                     Already have an account? <a href="#" class="auth-link" onclick="switchForm('login')">Sign In</a>
@@ -281,6 +300,7 @@
             </div>
 
         </div>
+
     </div>
 
     <div class="modal fade" id="forgotPinModal" tabindex="-1" data-bs-backdrop="static">
@@ -357,15 +377,25 @@
             if (formType === 'register') {
                 loginSec.classList.add('d-none');
                 regSec.classList.remove('d-none');
-                brandTitle.innerText = "Join Mess Manager";
-                brandSub.innerText = "Set up your mess in minutes. Track meals, expenses, and reports effortlessly.";
+                if(brandTitle) brandTitle.innerText = "Join Mess Manager";
+                if(brandSub) brandSub.innerText = "Set up your mess in minutes. Track meals, expenses, and reports effortlessly.";
             } else {
                 regSec.classList.add('d-none');
                 loginSec.classList.remove('d-none');
-                brandTitle.innerText = "Welcome Back";
-                brandSub.innerText = "Sign in to manage your mess, track meals, and keep expenses organized.";
+                if(brandTitle) brandTitle.innerText = "Welcome Back";
+                if(brandSub) brandSub.innerText = "Sign in to manage your mess, track meals, and keep expenses organized.";
             }
         }
+
+        // 🚀 NEW LOGIC: URL চেক করে অটোমেটিক সঠিক ফর্ম ওপেন করা
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+
+            if (tab === 'register') {
+                switchForm('register'); // সরাসরি রেজিস্ট্রেশন ফর্ম ওপেন করবে
+            }
+        });
 
         // 👁️ পিন Show/Hide করার ফাংশন
         window.toggleVisibility = function (inputId, iconEl) {
@@ -383,10 +413,12 @@
         };
 
         // ==========================================
-        // --- API LOGIC (REMAINS EXACTLY THE SAME) ---
+        // --- API LOGIC ---
         // ==========================================
 
-        async function executeLogin() {
+        async function executeLogin(e) {
+            if (e) e.preventDefault(); // 🚀 ফর্মের ডিফল্ট রিলোড হওয়া আটকে দেবে
+
             const email = document.getElementById('login-email').value;
             const pin = document.getElementById('login-pin').value;
 
@@ -395,6 +427,7 @@
             const btn = document.querySelector('#login-section .btn-brand');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+            btn.disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -420,10 +453,13 @@
                 Swal.fire('Error', 'সার্ভারে কানেক্ট করা যাচ্ছে না!', 'error');
             } finally {
                 btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
-        async function executeRegister() {
+        async function executeRegister(e) {
+            if (e) e.preventDefault(); // 🚀 ফর্মের ডিফল্ট রিলোড হওয়া আটকে দেবে
+
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
             const pin = document.getElementById('reg-pin').value;
@@ -433,6 +469,7 @@
             const btn = document.querySelector('#register-section .btn-brand');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+            btn.disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -444,7 +481,7 @@
 
                 if (response.ok) {
                     Swal.fire('Success!', 'অ্যাকাউন্ট তৈরি হয়েছে! এবার লগিন করুন।', 'success');
-                    switchForm('login'); // অটোমেটিক লগিন ফর্মে নিয়ে যাবে
+                    switchForm('login');
                 } else {
                     Swal.fire('Error', data.message || 'রেজিস্ট্রেশন ফেইল হয়েছে!', 'error');
                 }
@@ -452,6 +489,7 @@
                 Swal.fire('Error', 'সার্ভারে কানেক্ট করা যাচ্ছে না!', 'error');
             } finally {
                 btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
