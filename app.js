@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setDefaultDates();
     initGlobalDates();
     loadAllData();
+    loadGlobalNotice();
 
     if(typeof loadProfileData === 'function') loadProfileData();
 
@@ -2038,4 +2039,38 @@ window.showUpgradeModal = async function() {
 // পেজ লোড হওয়ার পর সাবস্ক্রিপশন চেক কল করা
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(checkSubscriptionStatus, 500); 
+});
+
+// ==========================================
+// 📢 গ্লোবাল নোটিশ বোর্ড (Fetch & Display)
+// ==========================================
+async function loadGlobalNotice() {
+    try {
+        // আমাদের বানানো প্রাইসিং API থেকেই নোটিশটি আনা হচ্ছে (কারণ এটি সবার জন্য উন্মুক্ত)
+        const res = await fetch(`${API_BASE_URL}/admin/pricing`);
+        const data = await res.json();
+        
+        if (data.success && data.data && data.data.globalNotice) {
+            const noticeText = data.data.globalNotice.trim();
+            const noticeContainer = document.getElementById('global-notice-container');
+            
+            // নোটিশের বক্সে কোনো লেখা থাকলে তবেই অ্যালার্ট শো করবে
+            if (noticeText !== '' && noticeContainer) {
+                noticeContainer.innerHTML = `
+                    <div class="alert alert-warning alert-dismissible fade show shadow-sm border-warning" role="alert" style="background-color: #fffbeb; color: #92400e;">
+                        <i class="bi bi-megaphone-fill text-warning me-2"></i>
+                        <strong class="me-1">Announcement:</strong> ${noticeText}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error("Error loading notice:", error);
+    }
+}
+
+// 🚀 পেজ লোড হওয়ার সময় নোটিশ ফাংশনটি কল করে দিন
+document.addEventListener('DOMContentLoaded', () => {
+    loadGlobalNotice(); 
 });

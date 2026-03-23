@@ -63,36 +63,28 @@
             </div>
         </div>
 
-        <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center">
-            <i class="bi bi-info-circle-fill me-2 fs-5"></i> 
-            <div>
-                <strong>Coming Soon!</strong> Detailed transaction logging and automated invoice generation system will be available in the next major update.
-            </div>
-        </div>
-
-        <div class="table-card p-0" style="overflow: hidden;">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="transactions-table" style="min-width: 800px;">
-                    <thead>
-                        <tr>
-                            <th>Trx ID</th>
-                            <th>Mess Name</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th class="text-end">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-5">
-                                <i class="bi bi-receipt fs-1 d-block mb-2 opacity-50"></i>
-                                No transaction data available yet.
-                            </td>
-                        </tr>
+        
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="transactions-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">MESS INFO</th>
+                                <th>PLAN</th>
+                                <th>AMOUNT</th>
+                                <th>DATE & TIME</th>
+                                <th class="text-end pe-4">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>
                         </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
         </div>
+        
     </div>
 
     <script>

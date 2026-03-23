@@ -42,21 +42,21 @@ function formatRemainingTime(endDate) {
 // ==========================================
 // 📊 ১. ড্যাশবোর্ড লোড এবং ডেটা আনা
 // ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    loadDashboardData();
 
-    // কুপন ফর্ম সাবমিট ইভেন্ট
-    const couponBtn = document.querySelector('.bg-indigo-50 button');
-    if (couponBtn) {
-        couponBtn.addEventListener('click', createCoupon);
-    }
-});
 
 async function loadDashboardData() {
     try {
         const response = await fetch(`${API_BASE_URL}/admin/messes`, {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
+        
+        // 🚀 ম্যাজিক ফিক্স: টোকেনের মেয়াদ শেষ হলে অটোমেটিক লগআউট করে দেবে!
+        if (response.status === 401) {
+            localStorage.removeItem('superAdminToken');
+            window.location.replace('index.html');
+            return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -78,7 +78,7 @@ async function updateAnalytics(messes) {
     const totalMesses = messes.length;
     const premiumMesses = messes.filter(m => m.subscriptionStatus === 'active' && m.trialEndsAt).length;
     const trialMesses = messes.filter(m => m.subscriptionStatus === 'trial').length;
-    
+
     let realRevenue = 0;
 
     try {
@@ -87,7 +87,7 @@ async function updateAnalytics(messes) {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
         const data = await res.json();
-        
+
         if (data.success && data.data) {
             // ম্যাজিক: যতগুলো সফল পেমেন্ট আছে, সবগুলোর 'amount' একসাথে যোগ করা হচ্ছে
             realRevenue = data.data.reduce((total, trx) => {
@@ -103,6 +103,30 @@ async function updateAnalytics(messes) {
     document.querySelectorAll('.stat-value')[1].innerText = premiumMesses;
     document.querySelectorAll('.stat-value')[2].innerText = trialMesses;
     document.querySelectorAll('.stat-value')[3].innerText = `৳${realRevenue}`;
+
+    // ==========================================
+    // 🚀 Advanced SaaS Metrics (MRR & Churn) 
+    // ==========================================
+    const now = new Date();
+    let expiredCount = 0;
+
+    // মেয়াদ শেষ হওয়া (Expired) মেসগুলো খুঁজে বের করা
+    messes.forEach(m => {
+        if (m.trialEndsAt && new Date(m.trialEndsAt) < now) {
+            expiredCount++;
+        }
+    });
+
+    // ১. MRR ক্যালকুলেশন: (মোট অ্যাক্টিভ প্রিমিয়াম ইউজার * বর্তমান মাসিক ফি)
+    const mrr = premiumMesses * currentMonthlyPrice;
+
+    // ২. Churn Rate ক্যালকুলেশন: (বাতিল ইউজার / মোট ইউজার) * ১০০
+    const churnRate = totalMesses > 0 ? ((expiredCount / totalMesses) * 100).toFixed(1) : 0;
+
+    // UI তে ডেটা বসানো
+    if(document.getElementById('stat-mrr')) document.getElementById('stat-mrr').innerText = `৳${mrr}`;
+    if(document.getElementById('stat-churn')) document.getElementById('stat-churn').innerText = churnRate;
+    if(document.getElementById('stat-expired-count')) document.getElementById('stat-expired-count').innerText = expiredCount;
 }
 
 // ==========================================
@@ -122,14 +146,14 @@ function renderMessTable(messes) {
 
     messes.reverse().forEach(mess => {
         const isTrial = mess.subscriptionStatus === 'trial';
-        const isFreeMode = mess.subscriptionStatus === 'active' && !mess.trialEndsAt; 
-        const isPremium = mess.subscriptionStatus === 'active' && mess.trialEndsAt; 
-        
+        const isFreeMode = mess.subscriptionStatus === 'active' && !mess.trialEndsAt;
+        const isPremium = mess.subscriptionStatus === 'active' && mess.trialEndsAt;
+
         const joinDate = new Date(mess.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-        
+
         let statusBadge = '';
         let expiryText = ''; // 🚀 মেয়াদের টেক্সট রাখার জন্য নতুন ভেরিয়েবল
-        let isBlocked = false; 
+        let isBlocked = false;
 
         // 🚀 স্ট্যাটাস এবং নতুন মেয়াদ (দিন, মাস, বছর) হিসাব করা হচ্ছে
         if (isFreeMode) {
@@ -144,14 +168,14 @@ function renderMessTable(messes) {
                 statusBadge = `<span class="badge bg-warning bg-opacity-10 text-dark px-2 py-1 border border-warning">Trial Active</span>`;
                 expiryText = `${formatRemainingTime(mess.trialEndsAt)} Left`;
             } else {
-                isBlocked = true; 
+                isBlocked = true;
                 statusBadge = `<span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 border border-danger">Expired</span>`;
                 expiryText = `Access Locked`;
             }
         }
 
         // 🚀 বাটন লজিক: ব্লক থাকলে Unblock বাটন, নাহলে Block বাটন
-        let actionButton = isBlocked 
+        let actionButton = isBlocked
             ? `<button class="btn btn-action btn-success shadow-sm" onclick="unblockMessSub('${mess._id}', '${mess.messName}')">Unblock</button>`
             : `<button class="btn btn-action btn-outline-danger shadow-sm" onclick="cancelMessSub('${mess._id}', '${mess.messName}')">Block / Cancel</button>`;
 
@@ -181,7 +205,7 @@ function renderMessTable(messes) {
 function checkGlobalSwitchState(messes) {
     // যদি বেশিরভাগ মেস "trial" স্টেটে থাকে, তার মানে সাবস্ক্রিপশন মোড অন করা আছে
     const isSubOn = messes.some(m => m.subscriptionStatus === 'trial' && m.trialEndsAt);
-    
+
     const switchEl = document.getElementById('global-magic-switch');
     const modeText = document.getElementById('mode-text');
     const subText = modeText.nextElementSibling;
@@ -195,15 +219,15 @@ function checkGlobalSwitchState(messes) {
     }
 }
 
-window.toggleMagicSwitch = async function(checkbox) {
+window.toggleMagicSwitch = async function (checkbox) {
     const isSubscriptionOn = checkbox.checked;
     const modeText = document.getElementById('mode-text');
     const subText = modeText.nextElementSibling;
 
     const confirmAction = await Swal.fire({
         title: isSubscriptionOn ? 'Enable Subscription Mode?' : 'Make App Free?',
-        text: isSubscriptionOn 
-            ? "এটি অন করলে সবার ফ্রি অ্যাক্সেস বন্ধ হয়ে যাবে এবং ২০ দিনের ট্রায়াল কাউন্টডাউন শুরু হবে!" 
+        text: isSubscriptionOn
+            ? "এটি অন করলে সবার ফ্রি অ্যাক্সেস বন্ধ হয়ে যাবে এবং ২০ দিনের ট্রায়াল কাউন্টডাউন শুরু হবে!"
             : "এটি অফ করলে সবার ট্রায়াল ডেট মুছে যাবে এবং অ্যাপ সবার জন্য ফ্রি হয়ে যাবে!",
         icon: 'warning',
         showCancelButton: true,
@@ -216,7 +240,7 @@ window.toggleMagicSwitch = async function(checkbox) {
         try {
             const res = await fetch(`${API_BASE_URL}/admin/toggle-subscription`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminToken}`
                 },
@@ -224,7 +248,7 @@ window.toggleMagicSwitch = async function(checkbox) {
             });
 
             const data = await res.json();
-            
+
             if (res.ok) {
                 Swal.fire('Success!', data.message, 'success');
                 if (isSubscriptionOn) {
@@ -253,7 +277,7 @@ window.toggleMagicSwitch = async function(checkbox) {
 // ==========================================
 // 🚫 ৪. সাবস্ক্রিপশন ক্যানসেল / মেস ব্লক
 // ==========================================
-window.cancelMessSub = async function(id, name) {
+window.cancelMessSub = async function (id, name) {
     const { isConfirmed } = await Swal.fire({
         title: `Block "${name}"?`,
         text: "এই মেসটির মেয়াদ শেষ করে দেওয়া হবে এবং অ্যাপ লক হয়ে যাবে।",
@@ -291,7 +315,7 @@ async function createCoupon(e) {
     e.preventDefault();
     const container = document.querySelector('.bg-indigo-50');
     const inputs = container.querySelectorAll('input, select');
-    
+
     const code = inputs[0].value;
     const discountAmount = inputs[1].value;
     const discountType = inputs[2].value.includes('%') ? 'percentage' : 'flat';
@@ -301,7 +325,7 @@ async function createCoupon(e) {
     try {
         const res = await fetch(`${API_BASE_URL}/admin/coupons`, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${adminToken}`
             },
@@ -347,7 +371,7 @@ if (logoutBtn) {
 // ==========================================
 // 🔓 ৪.২ আনব্লক করা 
 // ==========================================
-window.unblockMessSub = async function(id, name) {
+window.unblockMessSub = async function (id, name) {
     const { isConfirmed } = await Swal.fire({
         title: `Unblock "${name}"?`,
         text: "এই মেসটি আবার অ্যাপ ব্যবহার করতে পারবে।",
@@ -385,27 +409,26 @@ async function loadPricing() {
     try {
         const res = await fetch(`${API_BASE_URL}/admin/pricing`);
         const data = await res.json();
-        if(data.success && data.data) {
+        if (data.success && data.data) {
             currentMonthlyPrice = data.data.monthlyPrice; // 🚀 গ্লোবাল ভেরিয়েবলে সেভ করা হলো
             document.getElementById('admin-price-month').value = data.data.monthlyPrice;
             document.getElementById('admin-price-year').value = data.data.yearlyPrice;
+            if (document.getElementById('current-notice-display')) {
+                document.getElementById('current-notice-display').innerHTML = `Current Notice: <span class="fw-bold text-dark">${data.data.globalNotice || '<span class="fst-italic text-muted">None (Hidden)</span>'}</span>`;
+            }
         }
-    } catch(e) { console.error("Price Load Error", e); }
+    } catch (e) { console.error("Price Load Error", e); }
 }
 
-// 🚀 পেজ লোড ইভেন্ট চেইনিং
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadPricing(); // আগে প্রাইস আনবে
-    loadDashboardData(); // তারপর মেসের ডেটা এনে রেভিনিউ হিসাব করবে
-});
 
-window.updateAdminPricing = async function() {
+
+window.updateAdminPricing = async function () {
     const month = document.getElementById('admin-price-month').value;
     const year = document.getElementById('admin-price-year').value;
-    
+
     const btn = document.querySelector('button[onclick="updateAdminPricing()"]');
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-    
+
     try {
         const res = await fetch(`${API_BASE_URL}/admin/pricing`, {
             method: 'POST',
@@ -413,29 +436,25 @@ window.updateAdminPricing = async function() {
             body: JSON.stringify({ monthlyPrice: month, yearlyPrice: year })
         });
         const data = await res.json();
-        
-        if(res.ok) Swal.fire('Saved!', 'Pricing has been updated globally.', 'success');
+
+        if (res.ok) Swal.fire('Saved!', 'Pricing has been updated globally.', 'success');
         else Swal.fire('Error', data.message, 'error');
-    } catch(e) {
+    } catch (e) {
         Swal.fire('Error', 'Server connection failed!', 'error');
     } finally {
         btn.innerHTML = '<i class="bi bi-floppy-fill me-2"></i> Save Pricing';
     }
 }
 
-// 🚀 পেজ লোড হওয়ার সময় loadPricing() কল করার জন্য একদম ওপরের DOMContentLoaded এ এটি অ্যাড করুন
-document.addEventListener('DOMContentLoaded', () => {
-    loadDashboardData();
-    loadPricing(); // নতুন লাইন
-});
+
 
 // ==========================================
 // 🔄 ৮. Tab Switching Logic (SPA)
 // ==========================================
-window.switchTab = function(tabId, element) {
+window.switchTab = function (tabId, element) {
     // সব সেকশন হাইড করো
     document.querySelectorAll('.content-section').forEach(sec => sec.style.display = 'none');
-    
+
     // শুধু সিলেক্ট করা সেকশন দেখাও
     document.getElementById(tabId + '-section').style.display = 'block';
 
@@ -465,10 +484,10 @@ async function loadAllCoupons() {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
         const data = await res.json();
-        
+
         const tbody = document.querySelector('#coupons-table tbody');
         tbody.innerHTML = '';
-        
+
         if (data.success && data.data.length > 0) {
             data.data.forEach(c => {
                 tbody.innerHTML += `
@@ -487,7 +506,7 @@ async function loadAllCoupons() {
 }
 
 // Full Directory Table (Overview এর ডেটাই এখানে কপি করা হবে)
-window.populateFullDirectory = function() {
+window.populateFullDirectory = function () {
     const mainTableHTML = document.querySelector('.table tbody').innerHTML;
     document.querySelector('#full-directory-table tbody').innerHTML = mainTableHTML;
 }
@@ -500,17 +519,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ১. Dashboard Overview পেজ
     if (path.includes('dashboard.html') || path.endsWith('/admin/')) {
-        if(document.getElementById('admin-price-month')) await loadPricing();
+        if (document.getElementById('admin-price-month')) await loadPricing();
         loadDashboardData();
-        loadChartData(); // 🚀 নতুন লাইন: চার্ট লোড করো
+
+        // 🚀 ম্যাজিক: ড্রপডাউনে ডায়নামিক মাস (Jan, Feb) অ্যাড করা হচ্ছে
+        const filterEl = document.getElementById('chart-filter');
+        if (filterEl) {
+            filterEl.innerHTML = `
+                <option value="1m">Last 30 Days</option>
+                <option value="6m" selected>Last 6 Months</option>
+                <option value="1y">Last 1 Year</option>
+                <optgroup label="Monthly Report" id="specific-months-group"></optgroup>
+            `;
+            const optGroup = document.getElementById('specific-months-group');
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            
+            for (let i = 0; i < 6; i++) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; // যেমন: 2026-03
+                const label = i === 0 ? `This Month (${monthNames[d.getMonth()]})` : `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+                optGroup.innerHTML += `<option value="${val}">${label}</option>`;
+            }
+        }
+
+        loadChartData(); 
     }
     // ২. Mess Directory পেজ
     else if (path.includes('directory.html')) {
         loadDirectoryData();
-    } 
+    }
     // ৩. Coupons & Promos পেজ
     else if (path.includes('coupons.html')) {
         loadAllCoupons();
+        const couponBtn = document.querySelector('.bg-indigo-50 button');
+        if (couponBtn) couponBtn.addEventListener('click', window.createCoupon);
     }
     // ৪. Transactions পেজ
     else if (path.includes('transactions.html')) {
@@ -523,8 +566,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ==========================================
 async function loadDirectoryData() {
     const tbody = document.querySelector('#full-directory-table tbody');
-    if(!tbody) return;
-    
+    if (!tbody) return;
+
     tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><span class="spinner-border text-primary"></span><div class="mt-2 text-muted small">Loading directory...</div></td></tr>';
 
     try {
@@ -532,7 +575,7 @@ async function loadDirectoryData() {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
         const data = await res.json();
-        
+
         tbody.innerHTML = '';
         if (data.success && data.data.length > 0) {
             data.data.reverse().forEach(mess => {
@@ -540,7 +583,7 @@ async function loadDirectoryData() {
                 const isPremium = mess.subscriptionStatus === 'active' && mess.trialEndsAt;
                 const isTrial = mess.subscriptionStatus === 'trial';
                 const joinDate = new Date(mess.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                
+
                 let statusBadge = '';
                 let expiryText = '';
                 let isBlocked = false;
@@ -549,11 +592,11 @@ async function loadDirectoryData() {
                 if (isFreeMode) {
                     statusBadge = `<span class="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1">Free Lifetime</span>`;
                     expiryText = `Unlimited Access`;
-                } 
+                }
                 else if (isPremium) {
                     statusBadge = `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Premium Pro</span>`;
                     expiryText = `${formatRemainingTime(mess.trialEndsAt)} Left`;
-                } 
+                }
                 else if (isTrial) {
                     let diffDays = Math.ceil((new Date(mess.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24));
                     if (diffDays > 0) {
@@ -566,7 +609,7 @@ async function loadDirectoryData() {
                     }
                 }
 
-                let actionBtn = isBlocked 
+                let actionBtn = isBlocked
                     ? `<button class="btn btn-action btn-success shadow-sm" onclick="unblockMessSub('${mess._id}', '${mess.messName}')">Unblock</button>`
                     : `<button class="btn btn-action btn-outline-danger shadow-sm" onclick="cancelMessSub('${mess._id}', '${mess.messName}')">Block / Cancel</button>`;
 
@@ -601,8 +644,8 @@ async function loadDirectoryData() {
 // ==========================================
 async function loadAllCoupons() {
     const tbody = document.querySelector('#coupons-table tbody');
-    if(!tbody) return;
-    
+    if (!tbody) return;
+
     // লোডিং স্পিনার
     tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><span class="spinner-border text-primary"></span><div class="mt-2 text-muted small">Loading coupons...</div></td></tr>';
 
@@ -611,7 +654,7 @@ async function loadAllCoupons() {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
         const data = await res.json();
-        
+
         tbody.innerHTML = '';
         if (data.success && data.data.length > 0) {
             data.data.forEach(c => {
@@ -634,31 +677,50 @@ async function loadAllCoupons() {
 }
 
 // ==========================================
-// 💳 Transactions ডেটা লোড করা
+// 💳 Transactions ডেটা লোড করা (Advanced Sales View)
 // ==========================================
 async function loadTransactionsData() {
     const tbody = document.querySelector('#transactions-table tbody');
-    if(!tbody) return;
-    
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><span class="spinner-border text-primary"></span><div class="mt-2 text-muted small">Loading transactions...</div></td></tr>';
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><span class="spinner-border text-primary"></span><div class="mt-2 text-muted small">Loading sales data...</div></td></tr>';
 
     try {
         const res = await fetch(`${API_BASE_URL}/admin/transactions`, {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
         const data = await res.json();
-        
+
         tbody.innerHTML = '';
         if (data.success && data.data.length > 0) {
             data.data.forEach(trx => {
-                const date = new Date(trx.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const dateObj = new Date(trx.date);
+                // 🚀 তারিখ এবং সময় আলাদা করা হলো
+                const date = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const time = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                
+                // 🚀 কোন প্যাকেজ কিনেছে তা বের করার লজিক
+                const isYearly = trx.amount >= (currentMonthlyPrice * 2);
+                const packageBadge = isYearly 
+                    ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-2 py-1"><i class="bi bi-calendar3"></i> 1 Year Plan</span>` 
+                    : `<span class="badge bg-info bg-opacity-10 text-info border border-info px-2 py-1"><i class="bi bi-calendar-event"></i> 1 Month Plan</span>`;
+
                 tbody.innerHTML += `
                     <tr>
-                        <td><div class="fw-bold text-secondary" style="font-family: monospace;">${trx.trxId}</div></td>
-                        <td><div class="fw-bold text-dark">${trx.messName}</div></td>
-                        <td><div class="fw-bolder text-success fs-6">৳${trx.amount}</div></td>
-                        <td><div class="text-muted small">${date}</div></td>
-                        <td class="text-end"><span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">${trx.status}</span></td>
+                        <td>
+                            <div class="fw-bold text-dark fs-6">${trx.messName}</div>
+                            <div class="small text-primary mb-1">${trx.messEmail || ''}</div>
+                            <div class="text-muted small" style="font-family: monospace;">TrxID: <span class="fw-bold text-dark">${trx.trxId}</span></div>
+                        </td>
+                        <td>${packageBadge}</td>
+                        <td><div class="fw-bolder text-success fs-5">৳${trx.amount}</div></td>
+                        <td>
+                            <div class="fw-bold text-secondary">${date}</div>
+                            <div class="small text-muted"><i class="bi bi-clock"></i> ${time}</div>
+                        </td>
+                        <td class="text-end">
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1"><i class="bi bi-check-circle-fill"></i> ${trx.status}</span>
+                        </td>
                     </tr>
                 `;
             });
@@ -671,7 +733,7 @@ async function loadTransactionsData() {
 }
 
 // কুপন তৈরি করা
-window.createCoupon = async function(e) {
+window.createCoupon = async function (e) {
     e.preventDefault();
     const btn = e.target;
     const code = document.getElementById('coupon-code').value.trim();
@@ -680,7 +742,7 @@ window.createCoupon = async function(e) {
     const limit = document.getElementById('coupon-limit').value;
     const expiry = document.getElementById('coupon-expiry').value;
 
-    if(!code || !amount || !limit || !expiry) {
+    if (!code || !amount || !limit || !expiry) {
         Swal.fire('Error', 'Please fill all coupon fields.', 'error');
         return;
     }
@@ -693,7 +755,7 @@ window.createCoupon = async function(e) {
             body: JSON.stringify({ code, discountAmount: amount, discountType: type, usageLimit: limit, expiresAt: expiry })
         });
         const data = await res.json();
-        if(data.success) {
+        if (data.success) {
             Swal.fire('Created!', data.message, 'success');
             document.getElementById('coupon-code').value = '';
             document.getElementById('coupon-amount').value = '';
@@ -702,7 +764,7 @@ window.createCoupon = async function(e) {
         } else {
             Swal.fire('Error', data.message, 'error');
         }
-    } catch(err) {
+    } catch (err) {
         Swal.fire('Error', 'Server connection failed', 'error');
     } finally {
         btn.innerHTML = '<i class="bi bi-plus-circle me-2"></i> Generate';
@@ -710,7 +772,7 @@ window.createCoupon = async function(e) {
 };
 
 // কুপন ডিলিট করা
-window.deleteCoupon = async function(id) {
+window.deleteCoupon = async function (id) {
     const { isConfirmed } = await Swal.fire({
         title: 'Delete Coupon?',
         text: "This action cannot be undone.",
@@ -726,11 +788,11 @@ window.deleteCoupon = async function(id) {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${adminToken}` }
             });
-            if(res.ok) {
+            if (res.ok) {
                 Swal.fire('Deleted!', 'Coupon has been removed.', 'success');
                 loadAllCoupons(); // লিস্ট রিলোড
             }
-        } catch(e) {
+        } catch (e) {
             Swal.fire('Error', 'Failed to delete coupon', 'error');
         }
     }
@@ -739,14 +801,14 @@ window.deleteCoupon = async function(id) {
 // কুপন লিস্ট রেন্ডার (টেবিল আপডেট)
 async function loadAllCoupons() {
     const tbody = document.querySelector('#coupons-table tbody');
-    if(!tbody) return;
-    
+    if (!tbody) return;
+
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>';
 
     try {
-        const res = await fetch(`${API_BASE_URL}/admin/coupons`, { headers: { 'Authorization': `Bearer ${adminToken}` }});
+        const res = await fetch(`${API_BASE_URL}/admin/coupons`, { headers: { 'Authorization': `Bearer ${adminToken}` } });
         const data = await res.json();
-        
+
         tbody.innerHTML = '';
         if (data.success && data.data.length > 0) {
             data.data.forEach(c => {
@@ -754,7 +816,7 @@ async function loadAllCoupons() {
                 const expiryDate = new Date(c.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
                 const isExpired = new Date() > new Date(c.expiresAt);
                 const isLimitReached = c.usedCount >= c.usageLimit;
-                
+
                 let statusHtml = `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Active</span>`;
                 if (isExpired) statusHtml = `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">Expired</span>`;
                 else if (isLimitReached) statusHtml = `<span class="badge bg-warning bg-opacity-10 text-dark border border-warning px-2 py-1">Limit Reached</span>`;
@@ -783,16 +845,29 @@ async function loadAllCoupons() {
 // ==========================================
 // 📈 Chart.js: রেভিনিউ এবং গ্রোথ চার্ট রেন্ডার করা
 // ==========================================
-let analyticsChartInstance = null; // ডাবল চার্ট লোড হওয়া আটকাতে
+let analyticsChartInstance = null;
 
 async function loadChartData() {
+    const filterEl = document.getElementById('chart-filter');
+    const range = filterEl ? filterEl.value : '6m'; 
+
     try {
-        const res = await fetch(`${API_BASE_URL}/admin/analytics-chart`, {
+        const res = await fetch(`${API_BASE_URL}/admin/analytics-chart?range=${range}`, {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
         const data = await res.json();
-        
+
         if (data.success) {
+            // 🚀 ম্যাজিক: রেভিনিউ এবং নতুন মেসের টোটাল নাম্বার যোগ করা হচ্ছে
+            const totalRev = data.revenueData.reduce((a, b) => a + b, 0);
+            const totalMesses = data.messesData.reduce((a, b) => a + b, 0);
+
+            // UI তে সংখ্যাগুলো বসিয়ে দেওয়া
+            const revEl = document.getElementById('chart-total-revenue');
+            const messesEl = document.getElementById('chart-total-messes');
+            if(revEl) revEl.innerText = `৳${totalRev}`;
+            if(messesEl) messesEl.innerText = totalMesses;
+
             renderChart(data.labels, data.revenueData, data.messesData);
         }
     } catch (error) {
@@ -802,7 +877,7 @@ async function loadChartData() {
 
 function renderChart(labels, revenueData, messesData) {
     const ctx = document.getElementById('analyticsChart');
-    if(!ctx) return;
+    if (!ctx) return;
 
     if (analyticsChartInstance) {
         analyticsChartInstance.destroy(); // পুরনো গ্রাফ মুছে নতুন গ্রাফ আঁকবে
@@ -852,3 +927,47 @@ function renderChart(labels, revenueData, messesData) {
         }
     });
 }
+
+// ==========================================
+// 📢 গ্লোবাল নোটিশ বোর্ড (Send & Load)
+// ==========================================
+window.sendGlobalNotice = async function () {
+    const notice = document.getElementById('global-notice-input').value.trim();
+    const btn = document.querySelector('button[onclick="sendGlobalNotice()"]');
+
+    // নোটিশ মুছতে চাইলে ইনপুট ফাঁকা রেখে সেন্ড করতে হবে
+    const actionText = notice ? 'publish this notice' : 'remove the current notice';
+
+    const { isConfirmed } = await Swal.fire({
+        title: 'Are you sure?',
+        text: `Do you want to ${actionText} for all users?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        confirmButtonText: 'Yes, Send it!'
+    });
+
+    if (isConfirmed) {
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        try {
+            const res = await fetch(`${API_BASE_URL}/admin/notice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify({ notice })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                Swal.fire('Sent!', data.message, 'success');
+                document.getElementById('current-notice-display').innerHTML = `Current Notice: <span class="fw-bold text-dark">${notice || '<span class="fst-italic text-muted">None (Hidden)</span>'}</span>`;
+                document.getElementById('global-notice-input').value = '';
+            } else {
+                Swal.fire('Error', data.message, 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Server connection failed!', 'error');
+        } finally {
+            btn.innerHTML = '<i class="bi bi-send-fill"></i>';
+        }
+    }
+};
