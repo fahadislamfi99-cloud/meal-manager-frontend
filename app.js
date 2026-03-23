@@ -42,6 +42,14 @@ document.addEventListener("DOMContentLoaded", () => {
         Swal.fire('Payment Failed!', 'পেমেন্ট সম্পন্ন হয়নি বা ক্যান্সেল করা হয়েছে। দয়া করে আবার চেষ্টা করুন।', 'error');
         window.history.replaceState(null, '', window.location.pathname);
     }
+
+    // 🚀 Check if the user is new and show the tour
+    if (!localStorage.getItem('tourCompleted')) {
+        setTimeout(() => {
+            startGuidedTour();
+            localStorage.setItem('tourCompleted', 'true'); // সেভ করে রাখলাম যাতে ২য় বার আর না আসে
+        }, 1500); // পেজ লোড হওয়ার ১.৫ সেকেন্ড পর ট্যুর শুরু হবে
+    }
 });
 
 
@@ -2098,4 +2106,63 @@ window.handleLogout = function () {
             window.location.replace('login.html');
         }
     });
+};
+
+// ==========================================
+// 🚀 SMART ONBOARDING (GUIDED TOUR)
+// ==========================================
+window.startGuidedTour = function() {
+    const navbarCollapse = document.getElementById('navbarNav');
+    if (navbarCollapse && !navbarCollapse.classList.contains('show') && window.innerWidth < 992) {
+        new bootstrap.Collapse(navbarCollapse).show();
+    }
+
+    introJs().setOptions({
+        steps: [
+            {
+                title: "<i class='bi bi-stars text-primary me-2'></i>স্বাগতম!",
+                intro: "Mess Manager-এ আপনাকে স্বাগতম! খাতা-কলমের হিসাবকে বিদায় জানিয়ে চলুন মাত্র ১ মিনিটে দেখে নিই কীভাবে আপনার মেস পরিচালনা করবেন।"
+            },
+            {
+                element: document.querySelector('.nav-link[data-target="members"]'),
+                title: "<i class='bi bi-people-fill text-primary me-2'></i>ধাপ ১: মেম্বার যুক্ত",
+                intro: "সবচেয়ে প্রথমে এখানে ক্লিক করে আপনার মেসের সব মেম্বারদের নাম ও রুম নম্বর যুক্ত করে নিন।",
+                position: 'bottom'
+            },
+            {
+                element: document.querySelector('.nav-link[data-target="add-meal"]'),
+                title: "<i class='bi bi-egg-fried text-warning me-2'></i>ধাপ ২: মিল এন্ট্রি",
+                intro: "প্রতিদিন কার কয়টি মিল (Sehri, Lunch, Dinner) তা এখান থেকে খুব সহজেই এন্ট্রি করতে পারবেন।",
+                position: 'bottom'
+            },
+            {
+                element: document.querySelector('.nav-link[data-target="add-bazar"]'),
+                title: "<i class='bi bi-cart-check-fill text-success me-2'></i>ধাপ ৩: বাজার খরচ",
+                intro: "কে কবে কত টাকার বাজার করেছে, তা এখানে এন্ট্রি করুন। মিল রেট ও খরচ সিস্টেম অটোমেটিক হিসাব করবে!",
+                position: 'bottom'
+            },
+            {
+                element: document.querySelector('.nav-link[data-target="view-balance"]'),
+                title: "<i class='bi bi-wallet2 text-info me-2'></i>টাকা জমা ও ব্যালেন্স",
+                intro: "কোন মেম্বার মেসে কত টাকা জমা দিলো এবং কার কত ব্যালেন্স আছে, তা এখান থেকে অ্যাড এবং চেক করতে পারবেন।",
+                position: 'bottom'
+            },
+            {
+                element: document.querySelector('.nav-link[data-target="report"]'),
+                title: "<i class='bi bi-file-earmark-bar-graph-fill text-danger me-2'></i>মাসিক রিপোর্ট",
+                intro: "মাস শেষে এখানে ক্লিক করলেই প্রত্যেকের মিল রেট, মোট খরচ এবং কার কত টাকা বকেয়া বা পাওনা তা এক ক্লিকে পিডিএফ (PDF) আকারে পেয়ে যাবেন।",
+                position: 'bottom'
+            },
+            {
+                title: "<i class='bi bi-check-circle-fill text-success me-2'></i>সব রেডি!",
+                intro: "আপনি এখন মেস ম্যানেজ করার জন্য পুরোপুরি প্রস্তুত! কোনো সাহায্য লাগলে মেনু থেকে আমাদের সাথে যোগাযোগ করতে পারেন।"
+            }
+        ],
+        showProgress: true,
+        showBullets: false,
+        nextLabel: 'Next <i class="bi bi-arrow-right ms-1"></i>',
+        prevLabel: '<i class="bi bi-arrow-left me-1"></i> Back',
+        doneLabel: 'Get Started <i class="bi bi-check2-circle ms-1"></i>',
+        overlayOpacity: 0.7
+    }).start();
 };
