@@ -170,48 +170,49 @@ window.applyGlobalFilterAndGoHome = async function () {
 // --- NAVIGATION LOGIC (With Smart Tab Memory & Time Limit) ---
 function setupNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
-
-    // ১. ম্যাজিক: কতক্ষণ আগে ট্যাব সেভ হয়েছিল তা চেক করা (এখানে ১ ঘণ্টা = 3600000 মিলি-সেকেন্ড দেওয়া হয়েছে)
+    
+    // ১. ম্যাজিক: কতক্ষণ আগে ট্যাব সেভ হয়েছিল তা চেক করা
     const savedTime = localStorage.getItem('tabSaveTime');
     const currentTime = new Date().getTime();
-    let savedTarget = 'dashboard'; // ডিফল্টভাবে ড্যাশবোর্ড দেখাবে
+    let savedTarget = 'dashboard'; 
 
-    // যদি ১ ঘণ্টার কম সময় হয়ে থাকে, তবেই সেভ করা আগের ট্যাবটি ওপেন করবে
-    if (savedTime && (currentTime - savedTime) < 1800000) { // ৩০ মিনিট = 1800000 মিলি-সেকেন্ড
+    if (savedTime && (currentTime - savedTime) < 1800000) { 
         savedTarget = localStorage.getItem('activeTab') || 'dashboard';
     } else {
-        // অনেক সময় পার হয়ে গেলে পুরনো মেমোরি ডিলিট করে দেবে
         localStorage.removeItem('activeTab');
         localStorage.removeItem('tabSaveTime');
     }
 
     navButtons.forEach(btn => {
-
-        // ২. সেভ করা বা ডিফল্ট ট্যাব অনুযায়ী সঠিক পেজটি ওপেন রাখা
-        if (btn.getAttribute('data-target') === savedTarget) {
+        
+        if(btn.getAttribute('data-target') === savedTarget) {
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
+            
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('d-none'));
             const targetEl = document.getElementById(savedTarget);
-            if (targetEl) targetEl.classList.remove('d-none');
+            if(targetEl) targetEl.classList.remove('d-none');
         }
 
-        // ৩. ক্লিক করার সাথে সাথে নতুন ট্যাবটি এবং "বর্তমান সময়" সেভ করে ফেলা
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             const target = btn.getAttribute('data-target');
-
-            // ব্রাউজারে ক্লিক করা ট্যাবের নাম এবং সময় সেভ করে রাখা হচ্ছে
+            
             localStorage.setItem('activeTab', target);
-            localStorage.setItem('tabSaveTime', new Date().getTime()); // <-- নতুন লাইন
+            localStorage.setItem('tabSaveTime', new Date().getTime()); 
 
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
+            
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('d-none'));
             document.getElementById(target).classList.remove('d-none');
-
+            
+            // 🚀 ম্যাজিক ফিক্স: নতুন পেজ ওপেন হওয়ার সাথে সাথে স্ক্রল করে একদম ওপরে নিয়ে যাওয়া
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // স্মুথ অ্যানিমেশন দিয়ে ওপরে যাবে
+            });
+            
             // মোবাইলের মেনুবার ক্লিক করার পর অটোমেটিক বন্ধ করে দেওয়া
             const navbarCollapse = document.getElementById('navbarNav');
             if (navbarCollapse && navbarCollapse.classList.contains('show')) {
@@ -1398,16 +1399,21 @@ window.triggerHandover = async function () {
         optionsHTML += `<option value="${m._id}">${m.name} (Room: ${m.room})</option>`;
     });
 
-    // ২. প্রফেশনাল SweetAlert পপআপ (SaaS স্টাইল)
+    // ২. প্রফেশনাল SweetAlert পপআপ (ইমেইল বক্স সহ)
     const { value: formValues } = await Swal.fire({
         title: '<i class="bi bi-exclamation-triangle-fill text-warning fs-1 d-block mb-2"></i> Close Term?',
         html: `
-            <p class="text-muted small mb-4">বর্তমান মেয়াদের সব হিসাব ক্লোজ হয়ে যাবে এবং বকেয়া (Due) ও পাওনা (Advance) টাকাগুলো ঠিক পরের মেয়াদে <strong>Previous Balance</strong> হিসেবে অটোমেটিক ট্রান্সফার হয়ে যাবে।</p>
-            <div class="text-start bg-light p-3 rounded border">
-                <label class="fw-bold small mb-2 text-dark">পরের মেয়াদের জন্য নতুন ম্যানেজার কে হবেন?</label>
-                <select id="next-manager-select" class="form-select border-primary fw-bold text-primary">
+            <p class="text-muted small mb-3">বর্তমান মেয়াদের সব হিসাব ক্লোজ হয়ে যাবে এবং বকেয়া (Due) ও পাওনা (Advance) টাকাগুলো অটোমেটিক ট্রান্সফার হয়ে যাবে।</p>
+            
+            <div class="text-start bg-light p-3 rounded-4 border mb-3">
+                <label class="fw-bold small mb-2 text-dark"><i class="bi bi-person-badge text-primary me-1"></i> নতুন ম্যানেজার কে হবেন?</label>
+                <select id="next-manager-select" class="form-select border-primary fw-bold text-primary mb-3">
                     ${optionsHTML}
                 </select>
+
+                <label class="fw-bold small mb-2 text-dark"><i class="bi bi-envelope-at text-success me-1"></i> নতুন লগিন ইমেইল (ঐচ্ছিক)</label>
+                <input type="email" id="next-manager-email" class="form-control" placeholder="যেমন: newmanager@gmail.com">
+                <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">ইমেইল দিলে নতুন ম্যানেজার এই ইমেইল দিয়ে লগিন করতে পারবেন। আগের পিন (PIN) একই থাকবে।</small>
             </div>
         `,
         showCancelButton: true,
@@ -1416,18 +1422,19 @@ window.triggerHandover = async function () {
         confirmButtonText: 'Yes, Close & Transfer <i class="bi bi-arrow-right-circle ms-1"></i>',
         preConfirm: () => {
             const newManagerId = document.getElementById('next-manager-select').value;
+            const newManagerEmail = document.getElementById('next-manager-email').value.trim();
+            
             if (!newManagerId) {
                 Swal.showValidationMessage('আপনাকে অবশ্যই একজন নতুন ম্যানেজার সিলেক্ট করতে হবে!');
                 return false;
             }
-            return newManagerId;
+            return { newManagerId, newManagerEmail };
         }
     });
 
     if (formValues) {
-        const newManagerId = formValues;
+        const { newManagerId, newManagerEmail } = formValues;
 
-        // লোডিং অ্যানিমেশন চালু
         Swal.fire({
             title: 'Processing Handover...',
             html: 'সবার ব্যালেন্স ট্রান্সফার করা হচ্ছে, দয়া করে অপেক্ষা করুন।<br><br><span class="spinner-border text-primary"></span>',
@@ -1436,17 +1443,14 @@ window.triggerHandover = async function () {
         });
 
         try {
-            // ৩. ট্রান্সফারের তারিখ নির্ধারণ (বর্তমান মেয়াদের End Date এর ঠিক পরের দিন)
             const endDateObj = new Date(globalEndDate);
             endDateObj.setDate(endDateObj.getDate() + 1);
             const nextDayStr = endDateObj.toISOString().split('T')[0];
 
-            // ৪. সবার ব্যালেন্স ট্রান্সফার করা (Looping through all members)
             const transferPromises = [];
             state.report.members.forEach(member => {
                 const balance = member.balance;
                 if (balance !== 0 && !member.isManager) {
-                    // ব্যালেন্স যদি মাইনাস (Due) হয়, তবে অটোমেটিক রিফান্ড বা নেগেটিভ ডেপোজিট হিসেবে যাবে
                     transferPromises.push(
                         fetch(`${API_BASE_URL}/deposits`, {
                             method: 'POST',
@@ -1461,21 +1465,24 @@ window.triggerHandover = async function () {
                 }
             });
 
-            // সব API কল একসাথে ফায়ার করা (যাতে সময় কম লাগে)
             await Promise.all(transferPromises);
 
-            // ৫. নতুন ম্যানেজার ডাটাবেসে সেট করা
             const newYear = endDateObj.getFullYear();
             const newMonth = endDateObj.getMonth() + 1;
 
+            // 🚀 ম্যাজিক: ইমেইলটা ব্যাকএন্ডে পাঠানো হচ্ছে
             await fetch(`${API_BASE_URL}/manager`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ member: newManagerId, year: newYear, month: newMonth })
+                body: JSON.stringify({ 
+                    member: newManagerId, 
+                    year: newYear, 
+                    month: newMonth,
+                    newEmail: newManagerEmail 
+                })
             });
 
-            // ৬. গ্লোবাল সেটিংস (Report Period) আপডেট করে নতুন মেয়াদে নিয়ে যাওয়া
-            const endOfNewMonthObj = new Date(newYear, newMonth, 0); // ওই মাসের শেষ দিন
+            const endOfNewMonthObj = new Date(newYear, newMonth, 0);
             const endOfNewMonthStr = endOfNewMonthObj.toISOString().split('T')[0];
 
             await fetch(`${API_BASE_URL}/settings`, {
@@ -1487,7 +1494,6 @@ window.triggerHandover = async function () {
                 })
             });
 
-            // লোকাল ভেরিয়েবল এবং ইনপুট ফিল্ড আপডেট
             globalStartDate = nextDayStr;
             globalEndDate = endOfNewMonthStr;
 
@@ -1496,18 +1502,27 @@ window.triggerHandover = async function () {
             if (startInput) startInput.value = globalStartDate;
             if (endInput) endInput.value = globalEndDate;
 
-            // ডেটা রিলোড করা
             await loadAllData();
 
-            // ৭. সাকসেস মেসেজ এবং ড্যাশবোর্ডে রিডাইরেক্ট
+            // 🚀 ম্যাজিক: ইমেইল পরিবর্তন হলে অটোমেটিক লগআউট করে দেবে
+            let successText = 'হিসাব সফলভাবে ক্লোজ হয়েছে এবং নতুন মেয়াদের ড্যাশবোর্ড রেডি!';
+            if (newManagerEmail) {
+                successText += `<br><br><span class="text-danger fw-bold">লগিন ইমেইল পরিবর্তন করা হয়েছে! নিরাপত্তার জন্য আপনাকে এখন লগআউট করা হবে।</span>`;
+            }
+
             Swal.fire({
                 icon: 'success',
                 title: 'Handover Successful!',
-                text: 'হিসাব সফলভাবে ক্লোজ হয়েছে এবং নতুন মেয়াদের ড্যাশবোর্ড রেডি!',
+                html: successText,
                 confirmButtonColor: '#198754'
             }).then(() => {
-                const dashboardBtn = document.querySelector('.nav-btn[data-target="dashboard"]');
-                if (dashboardBtn) dashboardBtn.click();
+                if (newManagerEmail) {
+                    localStorage.clear();
+                    window.location.replace('login.html');
+                } else {
+                    const dashboardBtn = document.querySelector('.nav-btn[data-target="dashboard"]');
+                    if (dashboardBtn) dashboardBtn.click();
+                }
             });
 
         } catch (error) {
@@ -2101,8 +2116,16 @@ window.handleLogout = function () {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // ব্রাউজার থেকে সব ডেটা ক্লিয়ার করে লগিন পেজে পাঠানো
+            // 🚀 ম্যাজিক ১: লগআউট করার আগে চেক করা ইউজার গাইড দেখেছে কি না
+            const isTourCompleted = localStorage.getItem('tourCompleted');
+            
+            // সব ক্লিয়ার করা হলো
             localStorage.clear();
+            sessionStorage.clear();
+            
+            // 🚀 ম্যাজিক ২: ক্লিয়ার করার পর আবার গাইড দেখার মেমোরিটি ফিরিয়ে দেওয়া হলো!
+            if(isTourCompleted) localStorage.setItem('tourCompleted', 'true');
+            
             window.location.replace('login.html');
         }
     });
@@ -2112,12 +2135,9 @@ window.handleLogout = function () {
 // 🚀 SMART ONBOARDING (GUIDED TOUR)
 // ==========================================
 window.startGuidedTour = function() {
-    const navbarCollapse = document.getElementById('navbarNav');
-    if (navbarCollapse && !navbarCollapse.classList.contains('show') && window.innerWidth < 992) {
-        new bootstrap.Collapse(navbarCollapse).show();
-    }
+    const intro = introJs();
 
-    introJs().setOptions({
+    intro.setOptions({
         steps: [
             {
                 title: "<i class='bi bi-stars text-primary me-2'></i>স্বাগতম!",
@@ -2163,6 +2183,46 @@ window.startGuidedTour = function() {
         nextLabel: 'Next <i class="bi bi-arrow-right ms-1"></i>',
         prevLabel: '<i class="bi bi-arrow-left me-1"></i> Back',
         doneLabel: 'Get Started <i class="bi bi-check2-circle ms-1"></i>',
-        overlayOpacity: 0.7
-    }).start();
+        overlayOpacity: 0.8,
+        exitOnOverlayClick: false, // 🚀 বাইরে ক্লিক করলে বন্ধ হবে না
+        disableInteraction: true // 🚀 হাইলাইট করা অংশে ক্লিক করতে পারবে না
+    });
+
+    // 🚀 ম্যাজিক ৩: ট্যুর শুরু হলে স্ক্রল বন্ধ করা এবং মোবাইল মেনু ওপেন করা
+    intro.onstart(function() {
+        document.body.style.overflow = 'hidden'; // স্ক্রল লক
+        
+        const navbarCollapse = document.getElementById('navbarNav');
+        if (navbarCollapse && !navbarCollapse.classList.contains('show') && window.innerWidth < 992) {
+            navbarCollapse.classList.add('show'); // অ্যানিমেশন ছাড়াই মেনু ওপেন, যাতে ফোকাস ঠিক থাকে
+        }
+    });
+
+    // 🚀 ম্যাজিক ৪: প্রতি ধাপে মেনু চেক করা
+    intro.onbeforechange(function(targetElement) {
+        if (targetElement && targetElement.classList.contains('nav-link')) {
+            const navbarCollapse = document.getElementById('navbarNav');
+            if (navbarCollapse && !navbarCollapse.classList.contains('show') && window.innerWidth < 992) {
+                navbarCollapse.classList.add('show');
+            }
+        }
+    });
+
+    // 🚀 ম্যাজিক ৫: ট্যুর শেষ হলে (বা ডানদিকের X বাটনে ক্লিক করে Skip করলে) সব আগের মতো করা
+    const cleanup = function() {
+        document.body.style.overflow = ''; // স্ক্রল আনলক
+        
+        const navbarCollapse = document.getElementById('navbarNav');
+        if (navbarCollapse && navbarCollapse.classList.contains('show') && window.innerWidth < 992) {
+            navbarCollapse.classList.remove('show');
+        }
+        
+        // ডানদিকের কোণার X (Cross) বাটনে ক্লিক করা মানেই "Skip Forever"
+        localStorage.setItem('tourCompleted', 'true');
+    };
+
+    intro.oncomplete(cleanup);
+    intro.onexit(cleanup); // X বাটনে ক্লিক করলে এটি ট্রিগার হবে
+
+    intro.start();
 };
