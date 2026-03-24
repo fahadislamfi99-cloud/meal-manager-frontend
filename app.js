@@ -531,7 +531,9 @@ document.getElementById('btn-save-bulk-bazar')?.addEventListener('click', async 
     }
 });
 
-// Add Deposit Submit
+// ==========================================
+// --- ADD DEPOSIT LOGIC ---
+// ==========================================
 document.getElementById('form-add-deposit').addEventListener('submit', async (e) => {
     e.preventDefault();
     const date = document.getElementById('deposit-date').value;
@@ -542,7 +544,7 @@ document.getElementById('form-add-deposit').addEventListener('submit', async (e)
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.innerHTML;
 
-    // বাটনে লোডিং স্পিনার দেখানো এবং বাটন ডিজেবল করা (যাতে ডাবল ক্লিক না হয়)
+    // বাটনে লোডিং স্পিনার দেখানো
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...';
     submitBtn.disabled = true;
 
@@ -557,15 +559,18 @@ document.getElementById('form-add-deposit').addEventListener('submit', async (e)
             e.target.reset();
             setDefaultDates();
             await loadAllData();
-            // এখান থেকে alert('Deposit saved!'); লাইনটি সরিয়ে দেওয়া হয়েছে
+            
+            // 🚀 ম্যাজিক: সুন্দর ভাসমান সাকসেস মেসেজ!
+            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+            Toast.fire({ icon: 'success', title: 'Deposit Saved Successfully!' });
+            
         } else {
-            alert('❌ ডেপোজিট সেভ করতে সমস্যা হয়েছে!');
+            Swal.fire('Error!', 'ডেপোজিট সেভ করতে সমস্যা হয়েছে।', 'error');
         }
     } catch (error) {
         console.error("Error saving deposit:", error);
-        alert('ইন্টারনেট কানেকশন বা সার্ভারে সমস্যা আছে!');
+        Swal.fire('Error!', 'ইন্টারনেট কানেকশন বা সার্ভারে সমস্যা আছে!', 'error');
     } finally {
-        // ডেটা সেভ হওয়ার পর বাটন আবার আগের অবস্থায় ফিরিয়ে আনা
         submitBtn.innerHTML = originalBtnText;
         submitBtn.disabled = false;
     }
@@ -924,24 +929,29 @@ document.addEventListener("DOMContentLoaded", () => {
             submitBtn.disabled = true;
 
             try {
-                const res = await fetch('https://meal-manager-backend-kp8y.onrender.com/api/deposits', {
+                // 🚀 হার্ডকোডেড API এর বদলে ডায়নামিক API_BASE_URL ব্যবহার করা হলো
+                const res = await fetch(`${API_BASE_URL}/deposits`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date, member: memberId, amount: autoMinusAmount }) // মাইনাস ডেটা পাঠানো হলো
+                    body: JSON.stringify({ date, member: memberId, amount: autoMinusAmount }) 
                 });
 
                 if (res.ok) {
-                    // এখান থেকে alert মেসেজটি পুরোপুরি সরিয়ে দেওয়া হয়েছে
                     refundForm.reset();
                     if (dateInput) dateInput.value = localISOTime;
-                    await loadAllData(); // ডেটা রিলোড করে ব্যালেন্স আপডেট করা
+                    await loadAllData(); 
+                    
+                    // 🚀 ম্যাজিক: রিফান্ডের জন্যও সাকসেস মেসেজ!
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                    Toast.fire({ icon: 'success', title: 'Money Refunded Successfully!' });
+                    
                 } else {
                     const err = await res.json();
-                    alert(`❌ সমস্যা হয়েছে: ${err.message || 'Refund failed'}`);
+                    Swal.fire('Error!', `সমস্যা হয়েছে: ${err.message || 'Refund failed'}`, 'error');
                 }
             } catch (error) {
                 console.error(error);
-                alert('ইন্টারনেট কানেকশন বা সার্ভারে সমস্যা আছে!');
+                Swal.fire('Error!', 'ইন্টারনেট কানেকশন বা সার্ভারে সমস্যা আছে!', 'error');
             } finally {
                 // কাজ শেষ হলে বাটন আগের অবস্থায় ফিরে আসবে
                 submitBtn.innerHTML = originalBtnText;
