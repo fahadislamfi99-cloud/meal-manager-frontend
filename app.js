@@ -86,32 +86,60 @@ function applyGlobalFilter() {
     loadAllData(); // ডেটা রিলোড করবে
 }
 
-// UI তে সুন্দর করে তারিখ এবং সিস্টেম দেখানোর ফাংশন
+// ==========================================
+// 🚀 UI তে সুন্দর করে ম্যানেজারের নাম দেখানোর ফাংশন
+// ==========================================
 function updateDateRangeDisplay() {
     const displaySpan = document.getElementById('display-date-range');
-    if (displaySpan && globalStartDate && globalEndDate) {
+    const titleSpan = document.getElementById('dashboard-term-title');
+    
+    // ১. ম্যানেজারের নাম আপডেট করা
+    if (titleSpan && typeof state !== 'undefined' && state.terms) {
+        const selectedTermId = localStorage.getItem('selectedTermId');
+        const currentTerm = state.terms.find(t => t._id === selectedTermId) || state.terms.find(t => t.isActive);
+        
+        if (currentTerm && currentTerm.member) {
+            titleSpan.innerHTML = `Manager: <span class="text-dark">${currentTerm.member.name}</span>`;
+        } else {
+            titleSpan.innerText = "Report Session";
+        }
+    }
+
+    // ২. সেশনের তারিখ দেখানো
+    if (displaySpan && globalStartDate && globalStartDate !== 'undefined' && globalStartDate !== 'null') {
         const startObj = new Date(globalStartDate);
-        const endObj = new Date(globalEndDate);
-
-        // তারিখগুলোকে "Feb 01" এবং "Feb 28, 2026" ফরম্যাটে সাজানো
-        const startStr = startObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-        const endStr = endObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-
+        let startStr = globalStartDate;
+        if (!isNaN(startObj.getTime())) { 
+            startStr = startObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        }
+        
+        let endStr = "Present"; 
+        if (globalEndDate && globalEndDate !== 'null' && globalEndDate !== 'undefined') {
+            const endObj = new Date(globalEndDate);
+            if (!isNaN(endObj.getTime())) { 
+                endStr = endObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            }
+        }
         displaySpan.innerText = `(${startStr} - ${endStr})`;
     }
 
-    // ম্যাজিক: ক্যালকুলেশন মোড (Average/Fixed) ব্যাজে আপডেট করা
+    // ৩. ক্যালকুলেশন মোড (Average/Fixed) ব্যাজে আপডেট করা
     const modeTextEl = document.getElementById('calc-mode-text');
     const calcModeBadge = document.getElementById('display-calc-mode');
 
     if (modeTextEl && calcModeBadge) {
-        const currentMode = localStorage.getItem('calcMode') || 'average';
+        // 🚀 ম্যাজিক: ডিফল্ট 'average' মুছে ফেলা হয়েছে। এখন সিলেক্ট না করলে ফাঁকা থাকবে।
+        const currentMode = (typeof state !== 'undefined' && state.settings && state.settings.calcMode) ? state.settings.calcMode : '';
+        
         if (currentMode === 'fixed') {
             modeTextEl.innerText = 'Fixed Rate';
             calcModeBadge.className = 'badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50';
-        } else {
+        } else if (currentMode === 'average') {
             modeTextEl.innerText = 'Average';
             calcModeBadge.className = 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-25';
+        } else {
+            modeTextEl.innerText = 'Not Set';
+            calcModeBadge.className = 'badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25';
         }
     }
 }
@@ -1453,9 +1481,11 @@ window.triggerHandover = async function () {
         });
 
         try {
-            const endDateObj = new Date(globalEndDate);
-            endDateObj.setDate(endDateObj.getDate() + 1);
-            const nextDayStr = endDateObj.toISOString().split('T')[0];
+            // আজকের তারিখ (ক্লোজ করার জন্য) এবং কালকের তারিখ (নতুন সেশন শুরুর জন্য)
+            const todayStr = new Date().toISOString().split('T')[0];
+            const tomorrowObj = new Date();
+            tomorrowObj.setDate(tomorrowObj.getDate() + 1);
+            const tomorrowStr = tomorrowObj.toISOString().split('T')[0];
 
             const transferPromises = [];
             state.report.members.forEach(member => {
@@ -1466,7 +1496,7 @@ window.triggerHandover = async function () {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                date: nextDayStr,
+                                date: tomorrowStr, // নতুন সেশনের শুরুতে টাকাটা অ্যাড হবে
                                 member: member.memberId || member._id,
                                 amount: balance
                             })
@@ -1477,55 +1507,29 @@ window.triggerHandover = async function () {
 
             await Promise.all(transferPromises);
 
-            const newYear = endDateObj.getFullYear();
-            const newMonth = endDateObj.getMonth() + 1;
-
-            // 🚀 ম্যাজিক: ইমেইলটা ব্যাকএন্ডে পাঠানো হচ্ছে
+            // 🚀 ম্যাজিক: নতুন সেশন ব্যাকএন্ডে পাঠানো
             await fetch(`${API_BASE_URL}/manager`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     member: newManagerId, 
-                    year: newYear, 
-                    month: newMonth,
+                    closeDate: todayStr,
+                    newStartDate: tomorrowStr,
                     newEmail: newManagerEmail 
                 })
             });
 
-            const endOfNewMonthObj = new Date(newYear, newMonth, 0);
-            const endOfNewMonthStr = endOfNewMonthObj.toISOString().split('T')[0];
-
-            await fetch(`${API_BASE_URL}/settings`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    periodStart: nextDayStr,
-                    periodEnd: endOfNewMonthStr
-                })
-            });
-
-            globalStartDate = nextDayStr;
-            globalEndDate = endOfNewMonthStr;
-
-            const startInput = document.getElementById('global-start-date');
-            const endInput = document.getElementById('global-end-date');
-            if (startInput) startInput.value = globalStartDate;
-            if (endInput) endInput.value = globalEndDate;
-
+            // টার্ম সিলেক্টরের মেমোরি রিমুভ করে দেওয়া যাতে সে লেটেস্ট সেশনে ফিরে যায়
+            localStorage.removeItem('selectedTermId');
             await loadAllData();
 
-            // 🚀 ম্যাজিক: ইমেইল পরিবর্তন হলে অটোমেটিক লগআউট করে দেবে
-            let successText = 'হিসাব সফলভাবে ক্লোজ হয়েছে এবং নতুন মেয়াদের ড্যাশবোর্ড রেডি!';
+            let successText = 'হিসাব সফলভাবে ক্লোজ হয়েছে এবং নতুন সেশন শুরু হয়েছে!';
             if (newManagerEmail) {
                 successText += `<br><br><span class="text-danger fw-bold">লগিন ইমেইল পরিবর্তন করা হয়েছে! নিরাপত্তার জন্য আপনাকে এখন লগআউট করা হবে।</span>`;
             }
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Handover Successful!',
-                html: successText,
-                confirmButtonColor: '#198754'
-            }).then(() => {
+            Swal.fire({ icon: 'success', title: 'Handover Successful!', html: successText, confirmButtonColor: '#198754' })
+            .then(() => {
                 if (newManagerEmail) {
                     localStorage.clear();
                     window.location.replace('login.html');
@@ -2235,4 +2239,175 @@ window.startGuidedTour = function() {
     intro.onexit(cleanup); // X বাটনে ক্লিক করলে এটি ট্রিগার হবে
 
     intro.start();
+};
+
+// ==========================================
+// 🚀 SETUP STEP 2: SET MANAGER
+// ==========================================
+window.startFirstManagerSetup = async function () {
+    const activeMembers = state.members.filter(m => m.isActive).sort((a, b) => String(a.room).localeCompare(String(b.room), undefined, { numeric: true }));
+
+    let optionsHTML = '<option value="" disabled selected>-- ম্যানেজার সিলেক্ট করুন --</option>';
+    activeMembers.forEach(m => {
+        optionsHTML += `<option value="${m._id}">${m.name} (Room: ${m.room})</option>`;
+    });
+
+    const { value: formValues } = await Swal.fire({
+        title: '<i class="bi bi-person-check-fill text-primary fs-1 d-block mb-2"></i> Set First Manager',
+        html: `
+            <div class="text-start bg-light p-3 rounded-4 border mb-3">
+                <label class="fw-bold small mb-2 text-dark">ম্যানেজার কে হবেন?</label>
+                <select id="first-manager-select" class="form-select border-primary fw-bold text-primary mb-3">
+                    ${optionsHTML}
+                </select>
+                <label class="fw-bold small mb-2 text-dark">লগিন ইমেইল (ঐচ্ছিক)</label>
+                <input type="email" id="first-manager-email" class="form-control" placeholder="যেমন: manager@gmail.com">
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        confirmButtonText: 'Save Manager <i class="bi bi-arrow-right ms-1"></i>',
+        preConfirm: () => {
+            const newManagerId = document.getElementById('first-manager-select').value;
+            const newManagerEmail = document.getElementById('first-manager-email').value.trim();
+            if (!newManagerId) {
+                Swal.showValidationMessage('আপনাকে অবশ্যই একজন ম্যানেজার সিলেক্ট করতে হবে!');
+                return false;
+            }
+            return { newManagerId, newManagerEmail };
+        }
+    });
+
+    if (formValues) {
+        Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const todayStr = new Date().toISOString().split('T')[0];
+            await fetch(`${API_BASE_URL}/manager`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ member: formValues.newManagerId, closeDate: todayStr, newStartDate: todayStr, newEmail: formValues.newManagerEmail })
+            });
+            localStorage.removeItem('selectedTermId');
+            await loadAllData();
+            Swal.close();
+            if (formValues.newManagerEmail) {
+                localStorage.clear();
+                window.location.replace('login.html');
+            }
+        } catch (error) { Swal.fire('Error!', 'ম্যানেজার সেট করতে সমস্যা হয়েছে।', 'error'); }
+    }
+};
+
+// ==========================================
+// 🚀 SETUP STEP 3: SET MEAL SYSTEM (UPDATED)
+// ==========================================
+window.startMealSystemSetup = async function () {
+    const { value: formValues } = await Swal.fire({
+        title: '<i class="bi bi-calculator text-success fs-1 d-block mb-2"></i> Meal Rate System',
+        html: `
+            <div class="text-start bg-light p-3 rounded-4 border mb-3">
+                <label class="fw-bold small mb-2 text-dark">সিস্টেম নির্বাচন করুন:</label>
+                <select id="first-calc-mode" class="form-select border-success fw-bold mb-2" onchange="toggleWizardFixedRates()">
+                    <option value="" disabled selected>-- সিস্টেম নির্বাচন করুন --</option>
+                    <option value="average">Average System (মোট বাজার ÷ মোট মিল)</option>
+                    <option value="fixed">Fixed System (নির্দিষ্ট রেট)</option>
+                </select>
+
+                <div id="wizard-help-average" class="alert alert-success p-2 mb-2 d-none" style="font-size: 0.8rem; border-radius: 8px;">
+                    <strong>Average System:</strong> পুরো মাসের মোট বাজার খরচকে মোট মিল দিয়ে ভাগ করে সবার জন্য সমান মিল রেট বের করা হবে।
+                </div>
+
+                <div id="wizard-help-fixed" class="alert alert-warning p-2 mb-2 d-none" style="font-size: 0.8rem; border-radius: 8px;">
+                    <strong>Fixed System:</strong> প্রতিটি মিলের জন্য আপনার নির্ধারিত রেট অনুযায়ী মেম্বারদের বিল কাটা হবে। মোট বাজারের সাথে এর কোনো সম্পর্ক থাকবে না।
+                </div>
+
+                <div id="wizard-fixed-rates-container" class="d-none mt-3 p-3 border border-warning border-opacity-50 rounded-3 bg-white shadow-sm">
+                    <h6 class="small fw-bold text-dark mb-2 border-bottom pb-2"><i class="bi bi-tag-fill text-warning me-1"></i>প্রতি বেলার নির্দিষ্ট রেট (৳) সেট করুন:</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="small text-muted mb-1 fw-bold">Breakfast</label>
+                            <input type="number" id="wizard-rate-breakfast" class="form-control form-control-sm border-warning" value="30" min="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-muted mb-1 fw-bold">Lunch</label>
+                            <input type="number" id="wizard-rate-lunch" class="form-control form-control-sm border-warning" value="60" min="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-muted mb-1 fw-bold">Dinner</label>
+                            <input type="number" id="wizard-rate-dinner" class="form-control form-control-sm border-warning" value="50" min="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-muted mb-1 fw-bold">Sehri</label>
+                            <input type="number" id="wizard-rate-sehri" class="form-control form-control-sm border-warning" value="40" min="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-muted mb-1 fw-bold">Iftar</label>
+                            <input type="number" id="wizard-rate-iftar" class="form-control form-control-sm border-warning" value="50" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 text-center border-top pt-2">
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle-fill text-primary me-1"></i>(ভয় নেই, পরবর্তীতে <strong>Settings</strong> মেনু থেকে এগুলো পরিবর্তন করা যাবে)
+                    </small>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        confirmButtonText: 'Finish Setup <i class="bi bi-check-circle ms-1"></i>',
+        didOpen: () => {
+            // ড্রপডাউন সিলেক্ট করলে অপশনগুলো শো/হাইড করার লজিক
+            window.toggleWizardFixedRates = function() {
+                const mode = document.getElementById('first-calc-mode').value;
+                const container = document.getElementById('wizard-fixed-rates-container');
+                const helpAvg = document.getElementById('wizard-help-average');
+                const helpFixed = document.getElementById('wizard-help-fixed');
+
+                if (mode === 'fixed') {
+                    container.classList.remove('d-none');
+                    helpAvg.classList.add('d-none');
+                    helpFixed.classList.remove('d-none');
+                } else if (mode === 'average') {
+                    container.classList.add('d-none');
+                    helpAvg.classList.remove('d-none');
+                    helpFixed.classList.add('d-none');
+                }
+            };
+        },
+        preConfirm: () => {
+            const mode = document.getElementById('first-calc-mode').value;
+            if (!mode) {
+                Swal.showValidationMessage('আপনাকে অবশ্যই একটি Meal Rate System নির্বাচন করতে হবে!');
+                return false;
+            }
+
+            // ব্যাকএন্ডে পাঠানোর জন্য ডেটা রেডি করা
+            const settingsData = { calcMode: mode };
+            
+            if (mode === 'fixed') {
+                settingsData.rateBreakfast = document.getElementById('wizard-rate-breakfast').value || 0;
+                settingsData.rateLunch = document.getElementById('wizard-rate-lunch').value || 0;
+                settingsData.rateDinner = document.getElementById('wizard-rate-dinner').value || 0;
+                settingsData.rateSehri = document.getElementById('wizard-rate-sehri').value || 0;
+                settingsData.rateIftar = document.getElementById('wizard-rate-iftar').value || 0;
+            }
+            
+            return settingsData;
+        }
+    });
+
+    if (formValues) {
+        Swal.fire({ title: 'Finalizing Setup...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            await fetch(`${API_BASE_URL}/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formValues) // ড্রপডাউন এবং রেট সবগুলো ডাটাবেসে সেভ হবে
+            });
+            await loadAllData();
+            Swal.fire({ icon: 'success', title: 'Setup Complete!', text: 'আপনার ড্যাশবোর্ড এখন ব্যবহারের জন্য পুরোপুরি প্রস্তুত!', confirmButtonColor: '#198754' });
+        } catch (error) { Swal.fire('Error!', 'সিস্টেম সেট করতে সমস্যা হয়েছে।', 'error'); }
+    }
 };

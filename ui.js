@@ -107,23 +107,89 @@ function renderDashboard() {
     const cashTextContainer = document.getElementById('text-cash');
     const cashCard = document.getElementById('card-cash');
 
-    // যদি ব্যালেন্স মাইনাস হয় (ম্যানেজার নিজের পকেট থেকে খরচ করেছেন)
     if (cashInHand < 0) {
-        cashEl.innerText = Math.abs(cashInHand); // মাইনাস চিহ্ন না দেখিয়ে পজিটিভ দেখাবে
+        cashEl.innerText = Math.abs(cashInHand); 
         cashTitle.innerText = "Manager's Due (ম্যানেজার পাবে)";
         cashTitle.className = "text-danger mb-1 fw-bold";
         cashTextContainer.className = "mb-0 text-danger";
         cashCard.classList.replace('border-dark', 'border-danger');
         cashCard.classList.replace('border-success', 'border-danger');
-    }
-    // যদি ব্যালেন্স প্লাস হয় (ম্যানেজারের হাতে টাকা আছে)
-    else {
+    } else {
         cashEl.innerText = cashInHand;
         cashTitle.innerText = "Cash in Hand (ক্যাশ আছে)";
         cashTitle.className = "text-success mb-1 fw-bold";
         cashTextContainer.className = "mb-0 text-success";
         cashCard.classList.replace('border-dark', 'border-success');
         cashCard.classList.replace('border-danger', 'border-success');
+    }
+
+    // ==========================================
+    // 🚀 ম্যাজিক: SMART SETUP WIZARD (3 STEPS)
+    // ==========================================
+    let setupWizard = document.getElementById('smart-setup-wizard');
+    
+    if (!setupWizard) {
+        setupWizard = document.createElement('div');
+        setupWizard.id = 'smart-setup-wizard';
+        const dashboardTitle = document.querySelector('#dashboard h3');
+        if (dashboardTitle) dashboardTitle.parentNode.insertBefore(setupWizard, dashboardTitle.nextSibling);
+    }
+
+    const activeMembersCount = state.members.filter(m => m.isActive).length;
+    const hasActiveManager = state.terms && state.terms.some(t => t.isActive);
+    const hasCalcMode = state.settings && state.settings.calcMode; // 🚀 ম্যাজিক: ৩ নম্বর ধাপের চেক
+
+    // 🌟 ধাপ ১: মেম্বার অ্যাড করা
+    if (activeMembersCount === 0) {
+        setupWizard.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%); border-left: 5px solid #4f46e5 !important;">
+                <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-2">🎉 আপনার নতুন মেসে স্বাগতম!</h4>
+                        <p class="text-secondary mb-0" style="font-size: 0.95rem;">মেস ম্যানেজমেন্ট শুরু করতে সবার প্রথমে আপনার মেসের <strong>মেম্বারদের নাম</strong> যুক্ত করুন।</p>
+                    </div>
+                    <button class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow-sm text-nowrap w-100 w-md-auto" onclick="document.querySelector('.nav-btn[data-target=\\'members\\']').click()">
+                        <i class="bi bi-person-plus-fill me-1"></i> Add Members Now
+                    </button>
+                </div>
+            </div>
+        `;
+    } 
+    // 🌟 ধাপ ২: ম্যানেজার সিলেক্ট করা
+    else if (!hasActiveManager) {
+        setupWizard.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
+                <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-2">👑 প্রথম ম্যানেজার নির্বাচন করুন!</h4>
+                        <p class="text-secondary mb-1" style="font-size: 0.95rem;">মেম্বার যুক্ত করা হয়েছে। হিসাব শুরু করার জন্য মেসের <strong>প্রথম ম্যানেজার</strong> নির্বাচন করুন।</p>
+                    </div>
+                    <button class="btn btn-warning text-dark fw-bold px-4 py-2 rounded-pill shadow-sm text-nowrap w-100 w-md-auto" onclick="startFirstManagerSetup()">
+                        <i class="bi bi-person-check-fill me-1"></i> Set Manager
+                    </button>
+                </div>
+            </div>
+        `;
+    } 
+    // 🌟 ধাপ ৩: Meal Rate System সিলেক্ট করা
+    else if (!hasCalcMode) {
+        setupWizard.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%); border-left: 5px solid #16a34a !important;">
+                <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-2">⚙️ Meal Rate System নির্বাচন করুন!</h4>
+                        <p class="text-secondary mb-1" style="font-size: 0.95rem;">মেসের বিল কীভাবে হিসাব হবে (Average নাকি Fixed) তা নির্ধারণ করুন।</p>
+                    </div>
+                    <button class="btn btn-success fw-bold px-4 py-2 rounded-pill shadow-sm text-nowrap w-100 w-md-auto" onclick="startMealSystemSetup()">
+                        <i class="bi bi-calculator me-1"></i> Select System
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    // 🌟 ধাপ ৪: সব শেষ হলে উইজার্ড গায়েব!
+    else {
+        setupWizard.innerHTML = ''; 
     }
 }
 
@@ -1030,13 +1096,40 @@ function populateBazarShopper() {
     if (dateInput) dateInput.value = localISOTime;
 }
 
+
+// ==========================================
+// 🚀 MEAL SYSTEM TOGGLE LOGIC
+// ==========================================
+window.toggleFixedRates = function() {
+    const mode = document.getElementById('setting-calc-mode').value;
+    const container = document.getElementById('fixed-rates-container');
+    const helpAverage = document.getElementById('help-average');
+    const helpFixed = document.getElementById('help-fixed');
+
+    if (mode === 'fixed') {
+        if (container) container.classList.remove('d-none');
+        if (helpAverage) helpAverage.classList.add('d-none');
+        if (helpFixed) helpFixed.classList.remove('d-none');
+    } else if (mode === 'average') {
+        if (container) container.classList.add('d-none');
+        if (helpAverage) helpAverage.classList.remove('d-none');
+        if (helpFixed) helpFixed.classList.add('d-none');
+    } else {
+        // কোনো কিছু সিলেক্ট করা না থাকলে সব হাইড থাকবে
+        if (container) container.classList.add('d-none');
+        if (helpAverage) helpAverage.classList.add('d-none');
+        if (helpFixed) helpFixed.classList.add('d-none');
+    }
+};
+
 function populateSettingsForm() {
     const s = state.settings;
     if (!s) return;
 
     const modeSelect = document.getElementById('setting-calc-mode');
     if (modeSelect) {
-        modeSelect.value = s.calcMode || 'average';
+        // 🚀 ম্যাজিক: এখান থেকেও 'average' মুছে দেওয়া হলো
+        modeSelect.value = s.calcMode || ''; 
         if (typeof toggleFixedRates === 'function') toggleFixedRates();
     }
 
@@ -1054,9 +1147,13 @@ function populateSettingsForm() {
         if (s.calcMode === 'fixed') {
             modeTextEl.innerText = 'Fixed Rate';
             calcModeBadge.className = 'badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50';
-        } else {
+        } else if (s.calcMode === 'average') {
             modeTextEl.innerText = 'Average';
             calcModeBadge.className = 'badge bg-success bg-opacity-10 text-success border border-success border-opacity-25';
+        } else {
+            // 🚀 ম্যাজিক: সিলেক্ট না করা থাকলে Not Set দেখাবে
+            modeTextEl.innerText = 'Not Set';
+            calcModeBadge.className = 'badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25';
         }
     }
 }

@@ -41,6 +41,7 @@ async function loadAllData() {
         await fetchSettings(); 
         
         // ২. Render-এর ফ্রি সার্ভার যাতে হ্যাং না হয়, তাই একসাথে ৫টি রিকোয়েস্ট না পাঠিয়ে একটি একটি করে পাঠানো হচ্ছে
+        await fetchTerms();
         await fetchMembers();
         await fetchBazar();
         await fetchMeals();
@@ -329,3 +330,67 @@ function deleteFullDayBazar(dateStr) {
         }
     });
 }
+
+async function fetchTerms() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/manager/terms`);
+        const json = await res.json();
+        if (json.success && json.data) {
+            state.terms = json.data;
+            populateTermSelector();
+        }
+    } catch (error) { console.error("Error fetching terms:", error); }
+}
+
+function populateTermSelector() {
+    const selector = document.getElementById('term-selector');
+    if (!selector) return;
+    selector.innerHTML = '';
+    
+    state.terms.forEach(term => {
+        const startStr = new Date(term.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        const endStr = term.isActive ? 'Present' : new Date(term.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        const mgrName = term.member ? term.member.name : 'Unknown';
+        const activeText = term.isActive ? ' 🟢 (Current)' : '';
+        
+        const option = document.createElement('option');
+        option.value = term._id;
+        option.dataset.start = term.startDate;
+        // যদি রানিং সেশন হয়, তাহলে endDate হিসেবে আজকের তারিখ সেট হবে
+        option.dataset.end = term.isActive ? new Date().toISOString().split('T')[0] : term.endDate; 
+        option.text = `${startStr} - ${endStr} | Mgr: ${mgrName}${activeText}`;
+        
+        // ডিফল্টভাবে রানিং সেশনটি সিলেক্টেড থাকবে
+        if (term.isActive && !localStorage.getItem('selectedTermId')) {
+            option.selected = true;
+            globalStartDate = option.dataset.start;
+            globalEndDate = option.dataset.end;
+        } else if (localStorage.getItem('selectedTermId') === term._id) {
+            option.selected = true;
+            globalStartDate = option.dataset.start;
+            globalEndDate = option.dataset.end;
+        }
+        
+        selector.appendChild(option);
+    });
+    
+    if(typeof updateDateRangeDisplay === 'function') updateDateRangeDisplay();
+}
+
+window.applyTermFilter = function() {
+    const selector = document.getElementById('term-selector');
+    const selectedOption = selector.options[selector.selectedIndex];
+    
+    globalStartDate = selectedOption.dataset.start;
+    globalEndDate = selectedOption.dataset.end;
+    localStorage.setItem('selectedTermId', selectedOption.value);
+    
+    updateDateRangeDisplay();
+    loadAllData();
+    
+    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+    Toast.fire({ icon: 'success', title: 'Session Loaded!' });
+    
+    const dashboardBtn = document.querySelector('.nav-btn[data-target="dashboard"]');
+    if (dashboardBtn) dashboardBtn.click();
+};

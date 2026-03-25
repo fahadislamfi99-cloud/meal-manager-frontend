@@ -2,6 +2,7 @@
 const API_BASE_URL = 'https://meal-manager-backend-kp8y.onrender.com/api';
 
 const state = {
+    terms: [],
     members: [],
     bazar: [],
     meals: [],
