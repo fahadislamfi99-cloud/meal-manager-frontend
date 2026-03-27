@@ -1579,18 +1579,18 @@ window.saveDisplaySettings = async function () {
 // ১. ডাটাবেস থেকে বর্তমান লিংকটি বক্সে লোড করা
 window.loadPublicLink = async function () {
     try {
-        const token = localStorage.getItem('managerToken'); // টোকেন নেওয়া হলো
+        const token = localStorage.getItem('managerToken');
         const res = await fetch(`${API_BASE_URL}/public/get-token`, {
             method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` } // 🛡️ ম্যাজিক: জোর করে টোকেন পাঠানো হলো!
+            headers: { 'Authorization': `Bearer ${token}` } 
         });
         const data = await res.json();
 
         if (data.success && data.shareToken) {
-            let basePath = window.location.href.split('?')[0].replace('index.html', '');
+            // 🚀 ম্যাজিক ফিক্স: URL থেকে app.html রিমুভ করে সঠিক পাথ বের করা
+            let basePath = window.location.href.split('?')[0].replace('index.html', '').replace('app.html', '');
             if (!basePath.endsWith('/')) basePath += '/';
 
-            // ইনপুট বক্সে লিংকটি বসিয়ে দেওয়া হচ্ছে
             document.getElementById('public-link-input').value = `${basePath}public-view.html?token=${data.shareToken}`;
         }
     } catch (err) { console.error(err); }
