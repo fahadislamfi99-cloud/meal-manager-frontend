@@ -105,7 +105,11 @@ async function fetchSettings() {
                 const startInput = document.getElementById('global-start-date');
                 const endInput = document.getElementById('global-end-date');
                 if(startInput) startInput.value = globalStartDate;
-                if(endInput) endInput.value = globalEndDate;
+                if(endInput) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    // 🚀 ফিক্স: ২০৩০ সাল হলে ইনপুট বক্সে আজকের তারিখ দেখাবে
+                    endInput.value = globalEndDate === '2030-12-31' ? todayStr : globalEndDate; 
+                }
                 
                 // UI আপডেট করা
                 if(typeof updateDateRangeDisplay === 'function') updateDateRangeDisplay();
@@ -356,8 +360,8 @@ function populateTermSelector() {
         const option = document.createElement('option');
         option.value = term._id;
         option.dataset.start = term.startDate;
-        // যদি রানিং সেশন হয়, তাহলে endDate হিসেবে আজকের তারিখ সেট হবে
-        option.dataset.end = term.isActive ? new Date().toISOString().split('T')[0] : term.endDate; 
+        // 🚀 ফিক্স: যদি রানিং সেশন হয়, তাহলে endDate হিসেবে '2030-12-31' সেট হবে (Present)
+        option.dataset.end = term.isActive ? '2030-12-31' : term.endDate;
         option.text = `${startStr} - ${endStr} | Mgr: ${mgrName}${activeText}`;
         
         // ডিফল্টভাবে রানিং সেশনটি সিলেক্টেড থাকবে

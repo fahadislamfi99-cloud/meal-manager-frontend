@@ -93,12 +93,12 @@ function renderDashboard() {
 
     document.getElementById('stat-members').innerText = activeMembers;
     document.getElementById('stat-meals').innerText = state.report.totalMeals || 0;
-    document.getElementById('stat-expense').innerText = totalExpense;
+    document.getElementById('stat-expense').innerText = totalExpense.toFixed(2);
     document.getElementById('stat-rate').innerText = (state.report.mealRate || 0).toFixed(2);
 
     // ১. মোট জমা হিসাব করা
     const totalDeposited = state.deposits.reduce((sum, d) => sum + d.amount, 0);
-    document.getElementById('stat-deposit').innerText = totalDeposited;
+    document.getElementById('stat-deposit').innerText = totalDeposited.toFixed(2);
 
     // ২. ম্যানেজারের কাছে থাকা ব্যালেন্স হিসাব করা
     const cashInHand = totalDeposited - totalExpense;
@@ -108,14 +108,14 @@ function renderDashboard() {
     const cashCard = document.getElementById('card-cash');
 
     if (cashInHand < 0) {
-        cashEl.innerText = Math.abs(cashInHand); 
+        cashEl.innerText = Math.abs(cashInHand).toFixed(2); 
         cashTitle.innerText = "Manager's Due (ম্যানেজার পাবে)";
         cashTitle.className = "text-danger mb-1 fw-bold";
         cashTextContainer.className = "mb-0 text-danger";
         cashCard.classList.replace('border-dark', 'border-danger');
         cashCard.classList.replace('border-success', 'border-danger');
     } else {
-        cashEl.innerText = cashInHand;
+        cashEl.innerText = cashInHand.toFixed(2);
         cashTitle.innerText = "Cash in Hand (ক্যাশ আছে)";
         cashTitle.className = "text-success mb-1 fw-bold";
         cashTextContainer.className = "mb-0 text-success";

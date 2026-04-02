@@ -114,7 +114,8 @@ function updateDateRangeDisplay() {
         }
         
         let endStr = "Present"; 
-        if (globalEndDate && globalEndDate !== 'null' && globalEndDate !== 'undefined') {
+        // 🚀 ফিক্স: ২০৩০ সাল হলে 'Present' লেখাটিই থেকে যাবে
+        if (globalEndDate && globalEndDate !== 'null' && globalEndDate !== 'undefined' && globalEndDate !== '2030-12-31') {
             const endObj = new Date(globalEndDate);
             if (!isNaN(endObj.getTime())) { 
                 endStr = endObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });

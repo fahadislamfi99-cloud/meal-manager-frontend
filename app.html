@@ -658,8 +658,7 @@
                                     <label class="form-label text-muted small fw-bold">Amount (৳)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-success text-white border-success">৳</span>
-                                        <input type="number" class="form-control border-success" id="deposit-amount"
-                                            placeholder="যেমন: 2000" required>
+                                        <input type="number" class="form-control border-success" id="deposit-amount" placeholder="যেমন: 2000" required min="0.01" step="any">
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-success w-100 fw-bold"><i
@@ -688,8 +687,7 @@
                                     <label class="form-label text-muted small fw-bold">Refund Amount (৳)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-danger text-white border-danger">৳</span>
-                                        <input type="number" id="refund-amount" class="form-control border-danger"
-                                            placeholder="যেমন: 500" required min="1">
+                                        <input type="number" id="refund-amount" class="form-control border-danger" placeholder="যেমন: 500 / 500.50" required min="0.01" step="any">
                                     </div>
                                     <div class="form-text text-danger small mt-1"><i class="bi bi-info-circle"></i>
                                         অ্যামাউন্ট অটোমেটিক মাইনাস হয়ে যাবে।</div>
